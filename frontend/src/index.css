@@ -1,0 +1,27 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
+@import 'tailwindcss';
+
+html,
+body {
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100%;
+}
+
+@theme inline {
+    --color-back-primary: var(--color-zinc-950);
+    --color-back-secondary: var(--color-zinc-900);
+    --color-back-tertiary: var(--color-zinc-800);
+    --color-back-quaternary: var(--color-zinc-700);
+    --color-back-quinary: var(--color-zinc-600);
+    --color-cta-primary: var(--color-blue-400);
+    --color-cta-primary-darker: var(--color-blue-500);
+    --color-cta-primary-darkest: var(--color-blue-600);
+    --color-warning: var(--color-yellow-400);
+    --color-warning-darker: var(--color-yellow-500);
+    --color-error: var(--color-red-300);
+    --color-back-error: var(--color-red-900);
+    --color-back-error-darker: var(--color-red-950);
+    --text-xs: 0.75rem;
+    --text-xxs: 0.625rem;
+    --breakpoint-3xl: 128rem;
+}

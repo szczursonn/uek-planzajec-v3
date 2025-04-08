@@ -1,0 +1,30 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "dev-host": "vite --host",
+        "build": "vite build",
+        "preview": "vite preview"
+    },
+    "dependencies": {
+        "@tailwindcss/vite": "^4.1.3",
+        "@zod/mini": "^4.0.0-beta.20250414T061543",
+        "cache-parser": "^1.2.5",
+        "clsx": "^2.1.1",
+        "pako": "^2.1.0",
+        "preact": "^10.26.5",
+        "swr": "^2.3.3",
+        "tailwindcss": "^4.1.3"
+    },
+    "devDependencies": {
+        "@preact/preset-vite": "^2.10.1",
+        "@types/node": "^22.14.0",
+        "@types/pako": "^2.0.3",
+        "globals": "^16.0.0",
+        "prettier": "^3.5.3",
+        "prettier-plugin-tailwindcss": "^0.6.11",
+        "typescript": "^5.8.3",
+        "vite": "^6.2.5"
+    }
+}
