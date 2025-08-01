@@ -27,7 +27,6 @@ export const Modal = ({
     onClose: () => void;
 }) => {
     const dialogRef = useRef<HTMLDialogElement>(null);
-    const dialogContentRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
         const dialogElement = dialogRef.current;
@@ -83,25 +82,6 @@ export const Modal = ({
         };
     }, []);
 
-    // Manual vertical positioning, to handle keyboards on mobile
-    useEffect(() => {
-        const dialogContentElement = dialogContentRef.current;
-        const visualViewport = window.visualViewport;
-        if (!dialogContentElement || !visualViewport) {
-            return;
-        }
-
-        const updateModalVerticalPosition = () => {
-            dialogContentElement.style.top = `${visualViewport.height / 2}px`;
-        };
-        updateModalVerticalPosition();
-
-        visualViewport.addEventListener('resize', updateModalVerticalPosition);
-        return () => {
-            visualViewport.removeEventListener('resize', updateModalVerticalPosition);
-        };
-    }, []);
-
     return (
         <dialog
             ref={dialogRef}
@@ -109,9 +89,8 @@ export const Modal = ({
             class="relative h-full max-h-full w-full max-w-full bg-transparent opacity-0 outline-0 transition-all duration-100 backdrop:duration-250"
         >
             <div
-                ref={dialogContentRef}
                 class={clsx(
-                    'bg-x-bg-secondary border-x-bg-tertiary shadow-x-bg-primary fixed left-1/2 flex h-full w-full max-w-full -translate-1/2 flex-col border-2 shadow-2xl transition-all lg:max-h-[calc(100%-8rem)] lg:rounded-lg',
+                    'bg-x-bg-secondary border-x-bg-tertiary shadow-x-bg-primary fixed top-1/2 left-1/2 flex h-full w-full max-w-full -translate-1/2 flex-col border-2 shadow-2xl transition-all lg:max-h-[calc(100%-8rem)] lg:rounded-lg',
                     MODAL_WIDTH_CLASS[width],
                     MODAL_HEIGHT_CLASS[height],
                 )}
