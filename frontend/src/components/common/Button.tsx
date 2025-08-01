@@ -9,7 +9,7 @@ const VARIANT_CLASSES = {
 } as const;
 
 const VARIANT_ENABLED_CLASSES = {
-    cta: 'hover:bg-x-cta-darker active:bg-x-cta-primary',
+    cta: 'hover:bg-x-cta-primary hover:border-x-cta-darker',
     secondary: 'hover:bg-x-bg-tertiary active:bg-x-bg-quaternary',
     tertiary: 'hover:bg-x-bg-quaternary active:bg-x-bg-quinary',
 } as const;

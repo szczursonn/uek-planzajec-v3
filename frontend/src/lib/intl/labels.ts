@@ -86,6 +86,7 @@ export const selectScheduleCTAs = {
     lecturer: 'Wybierz wykładowcę',
     room: 'Wybierz salę',
 } as const;
+export const selectScheduleGenericCTA = 'Wybierz plan zajęć';
 export const settings = 'Ustawienia';
 export const shareCTA = 'Udostępnij';
 export const showLongBreaks = 'Pokazuj długie przerwy';
