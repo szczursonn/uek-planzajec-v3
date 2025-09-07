@@ -36,7 +36,7 @@ export const AppHeader = ({
     }, [query.data?.headers]);
 
     return (
-        <div class="shadow-x-bg-primary sticky top-0 z-10 shadow-lg">
+        <div class="shadow-x-bg-primary sticky top-0 z-50 shadow-lg">
             <header class="bg-x-bg-secondary border-b-x-bg-tertiary flex h-16 w-full items-center justify-between border-b-2 px-3 py-2 transition-colors lg:px-4">
                 <div class="flex h-full w-full items-center gap-2 lg:w-auto lg:gap-4">
                     <div class="hidden lg:contents">
