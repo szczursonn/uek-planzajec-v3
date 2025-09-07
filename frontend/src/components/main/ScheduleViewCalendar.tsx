@@ -146,13 +146,14 @@ export const ScheduleViewCalendar = () => {
                       >
                           <span
                               class={clsx(
-                                  'flex flex-col items-center border-y-3 text-base sm:text-xs md:text-sm lg:text-base',
+                                  'flex flex-col items-center border-y-3 text-center text-base sm:text-xs md:text-sm lg:text-base',
                                   dayColumn.currentDateRelation === 'current'
                                       ? 'border-x-cta-primary bg-x-cta-darker font-bold'
                                       : 'font-semibold',
-                                  (dayColumn.items.length === 0 ||
-                                      (isCurrentSchedulePeriodUpcoming && dayColumn.currentDateRelation === 'past')) &&
-                                      'italic opacity-50',
+                                  dayColumn.items.length === 0 && 'italic opacity-50',
+                                  isCurrentSchedulePeriodUpcoming &&
+                                      dayColumn.currentDateRelation === 'past' &&
+                                      'italic line-through opacity-50',
                               )}
                           >
                               <span class="truncate">{dayColumn.label}</span>
