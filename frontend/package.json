@@ -8,22 +8,22 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@tailwindcss/vite": "^4.1.11",
-        "@zod/mini": "^4.0.0-beta.0",
+        "@tailwindcss/vite": "^4.1.13",
         "clsx": "^2.1.1",
-        "preact": "^10.26.9",
+        "preact": "^10.27.1",
         "stable-hash": "^0.0.6",
-        "swr": "^2.3.4",
-        "tailwindcss": "^4.1.11"
+        "swr": "^2.3.6",
+        "tailwindcss": "^4.1.13",
+        "zod": "^4.1.5"
     },
     "devDependencies": {
         "@preact/preset-vite": "^2.10.2",
-        "@types/node": "^24.0.15",
+        "@types/node": "^24.3.1",
         "globals": "^16.3.0",
         "prettier": "^3.6.2",
         "prettier-plugin-tailwindcss": "^0.6.14",
         "sharp": "^0.34.3",
-        "typescript": "^5.8.3",
-        "vite": "^7.0.5"
+        "typescript": "^5.9.2",
+        "vite": "^7.1.4"
     }
 }

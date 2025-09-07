@@ -1,4 +1,4 @@
-import * as z from '@zod/mini';
+import * as z from 'zod/mini';
 import { createUseAPI, scheduleIdSchema, ScheduleType } from './common';
 
 const GROUP_MODES = ['full-time', 'part-time'] as const;

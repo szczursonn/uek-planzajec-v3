@@ -1,6 +1,6 @@
 import type { TargetedEvent } from 'preact/compat';
 import { useCallback, useEffect, useState } from 'preact/hooks';
-import type * as z from '@zod/mini';
+import type * as z from 'zod/mini';
 
 window.history.scrollRestoration = 'manual';
 
@@ -174,7 +174,7 @@ export const createIntQueryParamState = (queryParamName: string) =>
         (value) => (value === null ? '' : value.toString()),
     );
 
-export const createEnumQueryParamState = <TEnumValue extends Readonly<Record<string, z.core.utils.EnumValue>>>(
+export const createEnumQueryParamState = <TEnumValue extends Readonly<Record<string, z.core.util.EnumValue>>>(
     queryParamName: string,
     enumSchema: z.ZodMiniEnum<TEnumValue>,
     defaultValue: z.core.$InferEnumOutput<TEnumValue>,

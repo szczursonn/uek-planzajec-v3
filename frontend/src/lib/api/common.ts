@@ -1,4 +1,4 @@
-import * as z from '@zod/mini';
+import * as z from 'zod/mini';
 import useSWR from 'swr';
 
 export const scheduleIdSchema = z.number().check(z.nonnegative());

@@ -1,4 +1,4 @@
-import * as z from '@zod/mini';
+import * as z from 'zod/mini';
 import { createLocalStorageState } from './state/localStorageState';
 import { hiddenSubjectsState, scheduleIdsState, scheduleTypeState } from './appScheduleQuery';
 import { scheduleIdSchema, scheduleTypeSchema } from './api/common';

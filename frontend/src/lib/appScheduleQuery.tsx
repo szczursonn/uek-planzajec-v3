@@ -1,4 +1,4 @@
-import * as z from '@zod/mini';
+import * as z from 'zod/mini';
 import { useContext, useMemo } from 'preact/hooks';
 import { type ComponentChildren, createContext } from 'preact';
 import { scheduleIdSchema, scheduleTypeSchema, type ScheduleType } from './api/common';

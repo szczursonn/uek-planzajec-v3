@@ -1,4 +1,4 @@
-import * as z from '@zod/mini';
+import * as z from 'zod/mini';
 import hash from 'stable-hash';
 import { createUseAPI, scheduleIdSchema, ScheduleType } from './common';
 import { DateParts } from '../date/dateParts';
