@@ -1,5 +1,7 @@
 import { TIME_ZONE } from './timeZone';
 
+// optimalization to minimize amount of calls to Intl API, which is super slow
+
 export class DateParts {
     private constructor(
         public readonly year: number,

@@ -103,6 +103,7 @@ export const useAggregateScheduleAPI = createUseAPI(
                     value: responseItem.type,
                     category: getScheduleItemTypeCategory(responseItem.type),
                 },
+                isOnline: !!responseItem.room?.url || responseItem.room?.name === 'Platforma Moodle',
             })),
         };
     },

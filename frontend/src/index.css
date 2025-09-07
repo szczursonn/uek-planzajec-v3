@@ -16,6 +16,7 @@ html {
     --color-x-text-default: var(--color-zinc-100);
     --color-x-text-default-muted: var(--color-zinc-400);
     --color-x-text-error: var(--color-red-300);
+    --color-x-online-item-highlight: var(--color-cyan-200);
 
     --color-x-bg-primary: var(--color-zinc-950);
     --color-x-bg-secondary: var(--color-zinc-900);

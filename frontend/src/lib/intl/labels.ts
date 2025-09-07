@@ -35,7 +35,7 @@ export const groupStages = {
     master: 'Magisterskie',
     uniform: 'Jednolite magisterskie',
 } as const;
-
+export const highlightOnlineOnlyDays = 'Podkreśl dni tylko online';
 export const howToAddICalToGoogleCalendarLinkTitle = 'Jak dodać plany zajęć do Kalendarza Google?';
 export const hideXCTA = (x: string) => `Ukryj "${x}"`;
 export const inX = (x: string) => `w: ${x}`;

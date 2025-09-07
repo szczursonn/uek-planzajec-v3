@@ -10,24 +10,24 @@ import { TIME_ZONE } from '../../lib/date/timeZone';
 import { createMoodleURL } from '../../lib/api/common';
 import type { ScheduleItem, ScheduleItemTypeCategory } from '../../lib/api/aggregateSchedule';
 import { schedulePeriodState, useAppScheduleQuery } from '../../lib/appScheduleQuery';
-import { LONG_BREAK_THRESHOLD, showLongBreaksState } from '../../lib/scheduleViewConfig';
+import { highlightOnlineOnlyDaysState, LONG_BREAK_THRESHOLD, showLongBreaksState } from '../../lib/scheduleViewConfig';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
 
 const getScheduleItemTypeCategoryClass = (category: ScheduleItemTypeCategory) => {
     switch (category) {
         case 'lecture':
-            return 'bg-sky-800 border-sky-900 hover:shadow-sky-700/25';
+            return 'bg-sky-800 border-sky-900 shadow-sky-700/25';
         case 'exercise':
-            return 'bg-amber-800 border-amber-900 hover:shadow-amber-700/25';
+            return 'bg-amber-800 border-amber-900 shadow-amber-700/25';
         case 'language':
-            return 'bg-green-700 border-green-900 hover:shadow-green-700/25';
+            return 'bg-green-700 border-green-900 shadow-green-700/25';
         case 'exam':
-            return 'bg-red-700 border-red-900 hover:shadow-red-700/25';
+            return 'bg-red-700 border-red-900 shadow-red-700/25';
         case 'cancelled':
-            return 'bg-zinc-800 border-zinc-900 text-zinc-400 hover:shadow-zinc-800/25';
+            return 'bg-zinc-800 border-zinc-900 text-zinc-400 shadow-zinc-800/25';
         default:
-            return 'bg-zinc-800 border-zinc-900 hover:shadow-zinc-800/25';
+            return 'bg-zinc-800 border-zinc-900 shadow-zinc-800/25';
     }
 };
 
@@ -64,6 +64,7 @@ export const ScheduleViewCalendar = () => {
     const currentDate = useCurrentDate('minute');
     const isCurrentSchedulePeriodUpcoming = schedulePeriodState.use() === 'upcoming';
     const currentShowLongBreaks = showLongBreaksState.use();
+    const currentHighlightOnlineOnlyDays = highlightOnlineOnlyDaysState.use();
 
     const dayColumns = useMemo(() => {
         const currentDateParts = DateParts.fromDate(currentDate);
@@ -71,6 +72,7 @@ export const ScheduleViewCalendar = () => {
         const dayColumns: {
             label: string;
             currentDateRelation: 'past' | 'current' | 'future';
+            isOnlineOnly: boolean;
             items: ScheduleItem[];
         }[] = [];
         let currentItemIndex = 0;
@@ -95,11 +97,12 @@ export const ScheduleViewCalendar = () => {
             ),
         )) {
             const compareNowResult = dateParts.compareWithoutTime(currentDateParts);
-            dayColumns.push({
+            const newDayColumn = {
                 label: groupLabelFormatter.format(dateParts.toDate()),
                 currentDateRelation: compareNowResult === -1 ? 'past' : compareNowResult === 0 ? 'current' : 'future',
+                isOnlineOnly: false,
                 items: [],
-            });
+            } as (typeof dayColumns)[number];
 
             while (currentItemIndex < (query.data?.filteredItems.length ?? 0)) {
                 const item = query.data!.filteredItems[currentItemIndex]!;
@@ -107,9 +110,12 @@ export const ScheduleViewCalendar = () => {
                     break;
                 }
 
-                dayColumns.at(-1)!.items.push(item);
+                newDayColumn.items.push(item);
+                newDayColumn.isOnlineOnly = newDayColumn.isOnlineOnly || item.isOnline;
                 currentItemIndex++;
             }
+
+            dayColumns.push(newDayColumn);
         }
 
         return dayColumns;
@@ -140,16 +146,21 @@ export const ScheduleViewCalendar = () => {
                       >
                           <span
                               class={clsx(
-                                  'flex flex-col items-center truncate border-y-3 text-base sm:text-xs md:text-sm lg:text-base',
+                                  'flex flex-col items-center border-y-3 text-base sm:text-xs md:text-sm lg:text-base',
                                   dayColumn.currentDateRelation === 'current'
                                       ? 'border-x-cta-primary bg-x-cta-darker font-bold'
                                       : 'font-semibold',
-                                  isCurrentSchedulePeriodUpcoming &&
-                                      dayColumn.currentDateRelation === 'past' &&
-                                      'italic opacity-60',
+                                  (dayColumn.items.length === 0 ||
+                                      (isCurrentSchedulePeriodUpcoming && dayColumn.currentDateRelation === 'past')) &&
+                                      'italic opacity-50',
                               )}
                           >
-                              {dayColumn.label}
+                              <span class="truncate">{dayColumn.label}</span>
+                              {currentHighlightOnlineOnlyDays && dayColumn.isOnlineOnly && (
+                                  <span class="text-x-online-item-highlight text-xs font-semibold">
+                                      {labels.online}
+                                  </span>
+                              )}
                           </span>
                           <ul class="flex flex-col gap-y-1">
                               {dayColumn.items.map((item, itemIndex) => {
@@ -185,7 +196,7 @@ export const ScheduleViewCalendar = () => {
                                               )}
                                           <div
                                               class={clsx(
-                                                  'sm:text-xxxs relative flex w-full flex-col gap-y-0.5 rounded-lg border-2 p-3 text-left text-xs transition-all hover:z-10 hover:shadow-2xl sm:p-1.5 lg:p-2.5 lg:text-xs',
+                                                  'sm:text-xxxs relative z-10 flex w-full flex-col gap-y-0.5 rounded-lg border-2 p-3 text-left text-xs transition-all hover:shadow-2xl sm:p-1.5 lg:p-2.5 lg:text-xs',
                                                   getScheduleItemTypeCategoryClass(item.type.category),
                                                   isCurrentSchedulePeriodUpcoming &&
                                                       isPastItem &&
@@ -217,12 +228,12 @@ export const ScheduleViewCalendar = () => {
                                                   {[item.subject, item.type.value].filter(Boolean).join(' - ')}
                                               </span>
                                               <div class="flex flex-wrap items-center gap-x-1">
-                                                  <span class="whitespace-nowrap">
+                                                  <span class="font-medium whitespace-nowrap">
                                                       {`${item.start.parts.toTimeString()}-${item.end.parts.toTimeString()}`}
                                                   </span>
                                                   {item.room &&
-                                                      (item.room?.url || item.room?.name === 'Platforma Moodle' ? (
-                                                          <span class="font-semibold text-cyan-200">
+                                                      (item.isOnline ? (
+                                                          <span class="text-x-online-item-highlight font-semibold">
                                                               {labels.online}
                                                           </span>
                                                       ) : (
@@ -241,7 +252,7 @@ export const ScheduleViewCalendar = () => {
                                                               href={createMoodleURL(lecturer.moodleId)}
                                                               title={labels.eBusinessCardForX(lecturer.name)}
                                                               target="_blank"
-                                                              class="focus-visible:outline-x-cta-primary hover:underline focus-visible:outline-3"
+                                                              class="focus-visible:outline-x-cta-primary active:text-x-text-default-muted transition-colors hover:underline focus-visible:outline-3"
                                                           >
                                                               {lecturer.name}
                                                           </a>

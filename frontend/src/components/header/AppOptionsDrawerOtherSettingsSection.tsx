@@ -1,9 +1,10 @@
 import { labels } from '../../lib/intl/labels';
-import { showLongBreaksState } from '../../lib/scheduleViewConfig';
+import { highlightOnlineOnlyDaysState, showLongBreaksState } from '../../lib/scheduleViewConfig';
 import { AppOptionsDrawerSection } from './AppOptionsDrawerSection';
 
 export const AppOptionsDrawerOtherSettingsSection = () => {
     const currentShowLongBreaks = showLongBreaksState.use();
+    const currentHighlightOnlineOnlyDays = highlightOnlineOnlyDaysState.use();
 
     return (
         <AppOptionsDrawerSection title={labels.settings}>
@@ -11,6 +12,11 @@ export const AppOptionsDrawerOtherSettingsSection = () => {
                 label={labels.showLongBreaks}
                 checked={currentShowLongBreaks}
                 onToggle={() => showLongBreaksState.set(!currentShowLongBreaks)}
+            />
+            <AppOptionsDrawerOtherSettingsSectionCheckbox
+                label={labels.highlightOnlineOnlyDays}
+                checked={currentHighlightOnlineOnlyDays}
+                onToggle={() => highlightOnlineOnlyDaysState.set(!currentHighlightOnlineOnlyDays)}
             />
         </AppOptionsDrawerSection>
     );
