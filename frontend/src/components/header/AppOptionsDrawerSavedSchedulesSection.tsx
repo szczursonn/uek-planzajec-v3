@@ -57,6 +57,7 @@ export const AppOptionsDrawerSavedSchedulesSection = () => {
                     <Button
                         disabled={!query.data || !!currentlyActiveSavedSchedule}
                         text={labels.saveCTA}
+                        title={labels.saveScheduleCTA}
                         icon="save"
                         onClick={() =>
                             savedSchedulesState.add({
@@ -73,6 +74,7 @@ export const AppOptionsDrawerSavedSchedulesSection = () => {
                 {currentlyActiveSavedSchedule && (
                     <Button
                         text={labels.removeCTA}
+                        title={labels.removeSavedScheduleCTA}
                         icon="cross"
                         onClick={() => savedSchedulesState.remove(currentlyActiveSavedSchedule)}
                     />

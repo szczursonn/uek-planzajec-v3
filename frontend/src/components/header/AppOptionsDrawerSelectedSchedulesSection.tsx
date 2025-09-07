@@ -46,6 +46,7 @@ export const AppOptionsDrawerSelectedSchedulesSection = () => {
                                 <RoundIconButton
                                     class="text-x-text-default-muted h-7 p-0.75"
                                     icon="plus"
+                                    title={labels.addScheduleCTA}
                                     href={createDerivedURL(selectorModalOpenState.createUpdate(true))}
                                     onClick={anchorPushStateHandler}
                                 />

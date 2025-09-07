@@ -79,6 +79,7 @@ export const AppOptionsDrawerSubjectsSection = () => {
                                 <RoundIconButton
                                     class="h-8 p-1.25"
                                     icon="info"
+                                    title={`${subject} - ${labels.details}`}
                                     href={createDerivedURL(subjectDetailsModalSubjectState.createUpdate(subject))}
                                     onClick={anchorPushStateHandler}
                                 />

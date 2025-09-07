@@ -3,6 +3,7 @@ import { TIME_ZONE } from '../date/timeZone';
 export const addScheduleCTA = 'Dodaj plan zajęć';
 export const appTitle = 'Plan zajęć UEK';
 export const appDescription = 'Nieoficjalny plan zajęć Uniwersytetu Ekonomicznego w Krakowie';
+export const details = 'Szczegóły';
 export const durationHoursAndMinutesShort = (ms: number) => {
     let minutes = Math.round(ms / (1000 * 60));
     const hours = Math.floor(minutes / 60);
@@ -59,6 +60,7 @@ export const officialScheduleFor = (scheduleName: string) => `Oficjalny plan zaj
 export const online = 'Online';
 export const otherLinks = 'Inne';
 export const saveCTA = 'Zapisz';
+export const saveScheduleCTA = 'Zapisz plan zajęć';
 export const saved = 'Zapisane';
 export const schedulePeriodNames = {
     upcoming: 'Nadchodzące zajęcia',
@@ -97,6 +99,7 @@ export const subjectDetailsItemListHeader = 'Lista zajęć';
 export const subjectDetailsLecturersSectionHeader = 'Prowadzący:';
 export const refreshCTA = 'Odśwież';
 export const removeCTA = 'Usuń';
+export const removeSavedScheduleCTA = 'Usuń zapisany plan zajęć';
 export const removeXCTA = (x: string) => `Usuń "${x}"`;
 export const unexpectedErrorHasOccured = 'Wystąpił nieoczekiwany błąd';
 export const unnamedPlaceholder = '<bez nazwy>';
@@ -105,5 +108,6 @@ export const timePeriod = 'Okres czasu';
 export const timeXOutOfY = (x: number, y: number) =>
     `${durationHoursAndMinutesShort(x)} (z ${durationHoursAndMinutesShort(y)})`;
 export const timeZoneMismatchMessage = `Daty są podane w strefie czasowej "${TIME_ZONE.UEK}", twoja strefa czasowa to "${TIME_ZONE.BROWSER}".`;
+export const toggleXCTA = (x: string) => `Przełącz "${x}"`;
 
 export * as labels from './labels';

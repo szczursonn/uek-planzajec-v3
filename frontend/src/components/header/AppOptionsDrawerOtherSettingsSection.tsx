@@ -8,7 +8,7 @@ export const AppOptionsDrawerOtherSettingsSection = () => {
     return (
         <AppOptionsDrawerSection title={labels.settings}>
             <AppOptionsDrawerOtherSettingsSectionCheckbox
-                title={labels.showLongBreaks}
+                label={labels.showLongBreaks}
                 checked={currentShowLongBreaks}
                 onToggle={() => showLongBreaksState.set(!currentShowLongBreaks)}
             />
@@ -17,17 +17,17 @@ export const AppOptionsDrawerOtherSettingsSection = () => {
 };
 
 const AppOptionsDrawerOtherSettingsSectionCheckbox = ({
-    title,
+    label,
     checked,
     onToggle,
 }: {
-    title: string;
+    label: string;
     checked: boolean;
     onToggle: () => void;
 }) => (
     <label
         class="hover:bg-x-bg-tertiary accent-x-bg-quinary flex w-full cursor-pointer items-center gap-2.5 rounded-xl px-2 py-1.5 transition-colors"
-        title={title}
+        title={labels.toggleXCTA(label)}
     >
         <input
             class="h-5 w-5 cursor-pointer"
@@ -40,6 +40,6 @@ const AppOptionsDrawerOtherSettingsSectionCheckbox = ({
                 }
             }}
         />
-        <span class="w-full truncate text-sm">{title}</span>
+        <span class="w-full truncate text-sm">{label}</span>
     </label>
 );
