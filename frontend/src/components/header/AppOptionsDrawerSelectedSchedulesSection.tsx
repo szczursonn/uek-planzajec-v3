@@ -21,7 +21,8 @@ export const AppOptionsDrawerSelectedSchedulesSection = () => {
         <AppOptionsDrawerSection title={labels.selectedScheduleSectionNames[currentScheduleType]}>
             {Array.from(Array(MAX_SELECTABLE_SCHEDULES).keys()).map((i) => {
                 const scheduleId = currentScheduleIds[i];
-                const scheduleDisplayName = query.data?.headers[i]?.name || currentScheduleIds[i]?.toString() || '';
+                const scheduleDisplayName =
+                    query.data?.schedule.headers[i]?.name || currentScheduleIds[i]?.toString() || '';
 
                 return (
                     <div

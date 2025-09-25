@@ -62,7 +62,7 @@ export const AppOptionsDrawerSavedSchedulesSection = () => {
                         onClick={() =>
                             savedSchedulesState.add({
                                 type: currentScheduleType,
-                                headers: query.data!.headers.map((header) => ({
+                                headers: query.data!.schedule.headers.map((header) => ({
                                     id: header.id,
                                     name: header.name,
                                 })),

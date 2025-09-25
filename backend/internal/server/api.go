@@ -66,6 +66,7 @@ func (srv *Server) handleHeaders(w http.ResponseWriter, r *http.Request) {
 	setCacheHeader(w, cacheExpirationDate)
 	respondJSON(w, headers)
 }
+
 func (srv *Server) handleAggregateSchedule(w http.ResponseWriter, r *http.Request) {
 	queryParams := r.URL.Query()
 	scheduleType := uek.ScheduleType(queryParams.Get("type"))
@@ -89,19 +90,59 @@ func (srv *Server) handleAggregateSchedule(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	isLastYear, _ := strconv.ParseBool(queryParams.Get("lastYear"))
+	var requestPeriodId *int
+	if maybeRequestPeriodId, err := strconv.Atoi(queryParams.Get("periodId")); err == nil {
+		requestPeriodId = &maybeRequestPeriodId
+	}
 
-	aggregateSchedule, cacheExpirationDate, err := srv.uek.GetAggregateSchedule(r.Context(), scheduleType, scheduleIds, isLastYear)
+	periods, periodsCacheExpirationDate, err := srv.uek.GetSchedulePeriods(r.Context())
+	if err != nil {
+		respondServiceUnavailable(w)
+		return
+	}
+
+	if requestPeriodId == nil {
+		if requestPeriodId = pickCurrentYearPeriodId(periods); requestPeriodId == nil {
+			respondServiceUnavailable(w)
+			return
+		}
+	} else {
+		idFound := false
+		for _, period := range periods {
+			if period.Id == *requestPeriodId {
+				idFound = true
+				break
+			}
+		}
+
+		if !idFound {
+			respondBadRequest(w)
+			return
+		}
+	}
+
+	aggregateSchedule, aggregateScheduleCacheExpirationDate, err := srv.uek.GetAggregateSchedule(r.Context(), scheduleType, scheduleIds, *requestPeriodId)
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
-			srv.logger.Error("Failed to get schedule", slog.Group("params", slog.String("scheduleType", string(scheduleType)), slog.Any("scheduleIds", scheduleIds), slog.Bool("lastYear", isLastYear)), slog.Any("err", err))
+			srv.logger.Error("Failed to get schedule", slog.Group("params", slog.String("scheduleType", string(scheduleType)), slog.Any("scheduleIds", scheduleIds), slog.Int("periodId", *requestPeriodId)), slog.Any("err", err))
 		}
 		respondServiceUnavailable(w)
 		return
 	}
 
-	setCacheHeader(w, cacheExpirationDate)
-	respondJSON(w, aggregateSchedule)
+	if aggregateScheduleCacheExpirationDate.Before(periodsCacheExpirationDate) {
+		setCacheHeader(w, aggregateScheduleCacheExpirationDate)
+	} else {
+		setCacheHeader(w, periodsCacheExpirationDate)
+	}
+
+	respondJSON(w, struct {
+		Schedule *uek.AggregateSchedule `json:"schedule"`
+		Periods  []uek.SchedulePeriod   `json:"periods"`
+	}{
+		Schedule: aggregateSchedule,
+		Periods:  periods,
+	})
 }
 
 func (srv *Server) handleICal(w http.ResponseWriter, r *http.Request) {
@@ -118,7 +159,19 @@ func (srv *Server) handleICal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	aggregateSchedule, cacheExpirationDate, err := srv.uek.GetAggregateSchedule(r.Context(), payload.ScheduleType, payload.ScheduleIds, false)
+	periods, periodsCacheExpirationDate, err := srv.uek.GetSchedulePeriods(r.Context())
+	if err != nil {
+		respondServiceUnavailable(w)
+		return
+	}
+
+	currentYearPeriodId := pickCurrentYearPeriodId(periods)
+	if currentYearPeriodId == nil {
+		respondServiceUnavailable(w)
+		return
+	}
+
+	aggregateSchedule, aggregateScheduleCacheExpirationDate, err := srv.uek.GetAggregateSchedule(r.Context(), payload.ScheduleType, payload.ScheduleIds, *currentYearPeriodId)
 	if err != nil {
 		respondServiceUnavailable(w)
 		return
@@ -137,7 +190,12 @@ func (srv *Server) handleICal(w http.ResponseWriter, r *http.Request) {
 	}
 	calendarName := calendarNameBuilder.String()
 
-	setCacheHeader(w, cacheExpirationDate)
+	if aggregateScheduleCacheExpirationDate.Before(periodsCacheExpirationDate) {
+		setCacheHeader(w, aggregateScheduleCacheExpirationDate)
+	} else {
+		setCacheHeader(w, periodsCacheExpirationDate)
+	}
+
 	w.Header().Set("Content-Type", "text/calendar; charset=utf-8")
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s.ics\"", calendarName))
 
@@ -205,4 +263,25 @@ func (srv *Server) handleICal(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fmt.Fprintln(w, "END:VCALENDAR")
+}
+
+func pickCurrentYearPeriodId(periods []uek.SchedulePeriod) *int {
+	now := time.Now()
+
+	var longestPeriodContainingNowId *int
+	longestPeriodContainingNowDuration := time.Duration(0)
+
+	for _, period := range periods {
+		if period.Start.After(now) || period.End.Before(now) {
+			continue
+		}
+
+		periodDuration := period.End.Sub(period.Start)
+		if periodDuration > longestPeriodContainingNowDuration {
+			longestPeriodContainingNowId = &period.Id
+			longestPeriodContainingNowDuration = periodDuration
+		}
+	}
+
+	return longestPeriodContainingNowId
 }

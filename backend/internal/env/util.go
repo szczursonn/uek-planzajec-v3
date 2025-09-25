@@ -19,11 +19,6 @@ func getEnvBoolWithDefault(key string, defaultValue bool) bool {
 	return value
 }
 
-func getEnvInt(key string) int {
-	value, _ := strconv.Atoi(getEnvString(key))
-	return value
-}
-
 func getEnvDuration(key string) time.Duration {
 	value, _ := time.ParseDuration(getEnvString(key))
 	return value

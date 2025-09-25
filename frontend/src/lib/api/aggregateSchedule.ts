@@ -43,70 +43,92 @@ export const getScheduleItemTypeCategory = (itemType: string) => {
 export type ScheduleItemTypeCategory = ReturnType<typeof getScheduleItemTypeCategory>;
 
 const aggregateScheduleResponseSchema = z.object({
-    headers: z.array(
+    schedule: z.object({
+        headers: z.array(
+            z.object({
+                id: scheduleIdSchema,
+                name: z.string().check(z.minLength(1)),
+                moodleId: z.optional(z.number()),
+            }),
+        ),
+        items: z.array(
+            z.object({
+                start: z.iso.datetime({
+                    offset: true,
+                }),
+                end: z.iso.datetime({
+                    offset: true,
+                }),
+                subject: z.string(),
+                type: z.string(),
+                groups: z._default(z.array(z.string().check(z.minLength(1))), []),
+                lecturers: z._default(
+                    z.array(
+                        z.object({
+                            name: z.string().check(z.minLength(1)),
+                            moodleId: z.optional(z.number()),
+                        }),
+                    ),
+                    [],
+                ),
+                room: z.optional(
+                    z.object({
+                        name: z.string().check(z.minLength(1)),
+                        url: z.optional(z.url()),
+                    }),
+                ),
+                extra: z.optional(z.string().check(z.minLength(1))),
+            }),
+        ),
+    }),
+    periods: z.array(
         z.object({
-            id: scheduleIdSchema,
-            name: z.string().check(z.minLength(1)),
-            moodleId: z.optional(z.number()),
-        }),
-    ),
-    items: z.array(
-        z.object({
-            start: z.iso.datetime({ offset: true }),
+            id: z.number(),
+            start: z.iso.datetime({
+                offset: true,
+            }),
             end: z.iso.datetime({
                 offset: true,
             }),
-            subject: z.string(),
-            type: z.string(),
-            groups: z._default(z.array(z.string().check(z.minLength(1))), []),
-            lecturers: z._default(
-                z.array(
-                    z.object({
-                        name: z.string().check(z.minLength(1)),
-                        moodleId: z.optional(z.number()),
-                    }),
-                ),
-                [],
-            ),
-            room: z.optional(
-                z.object({
-                    name: z.string().check(z.minLength(1)),
-                    url: z.optional(z.url()),
-                }),
-            ),
-            extra: z.optional(z.string().check(z.minLength(1))),
         }),
     ),
 });
 
 export const useAggregateScheduleAPI = createUseAPI(
-    (scheduleType: ScheduleType, scheduleIds: number[], lastYear: boolean) =>
+    (scheduleType: ScheduleType, scheduleIds: number[], periodId: number | null) =>
         scheduleIds.length > 0
-            ? `/api/aggregateSchedule?type=${encodeURIComponent(scheduleType)}&lastYear=${lastYear ? '1' : '0'}${scheduleIds.map((scheduleId) => `&id=${scheduleId}`).join('')}`
+            ? `/api/aggregateSchedule?type=${encodeURIComponent(scheduleType)}${periodId === null ? '' : `&periodId=${periodId}`}${scheduleIds.map((scheduleId) => `&id=${scheduleId}`).join('')}`
             : '',
     (responseData) => {
         const aggregateScheduleResponse = aggregateScheduleResponseSchema.parse(responseData);
         return {
-            ...aggregateScheduleResponse,
-            items: aggregateScheduleResponse.items.map((responseItem) => ({
-                ...responseItem,
-                id: hash(responseItem),
-                start: {
-                    date: new Date(responseItem.start),
-                    parts: DateParts.fromISO(responseItem.start),
-                },
-                end: {
-                    date: new Date(responseItem.end),
-                    parts: DateParts.fromISO(responseItem.end),
-                },
-                type: {
-                    value: responseItem.type,
-                    category: getScheduleItemTypeCategory(responseItem.type),
-                },
-                isOnline: !!responseItem.room?.url || responseItem.room?.name === 'Platforma Moodle',
+            schedule: {
+                ...aggregateScheduleResponse.schedule,
+                items: aggregateScheduleResponse.schedule.items.map((responseItem) => ({
+                    ...responseItem,
+                    id: hash(responseItem),
+                    start: {
+                        date: new Date(responseItem.start),
+                        parts: DateParts.fromISO(responseItem.start),
+                    },
+                    end: {
+                        date: new Date(responseItem.end),
+                        parts: DateParts.fromISO(responseItem.end),
+                    },
+                    type: {
+                        value: responseItem.type,
+                        category: getScheduleItemTypeCategory(responseItem.type),
+                    },
+                    isOnline: !!responseItem.room?.url || responseItem.room?.name === 'Platforma Moodle',
+                })),
+            },
+            periods: aggregateScheduleResponse.periods.map((period) => ({
+                id: period.id,
+                start: new Date(period.start),
+                end: new Date(period.end),
             })),
         };
     },
 );
 
-export type ScheduleItem = NonNullable<ReturnType<typeof useAggregateScheduleAPI>['data']>['items'][number];
+export type ScheduleItem = NonNullable<ReturnType<typeof useAggregateScheduleAPI>['data']>['schedule']['items'][number];

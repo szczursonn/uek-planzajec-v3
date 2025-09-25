@@ -2,7 +2,7 @@ package uek
 
 import (
 	"context"
-	"encoding/xml"
+	"fmt"
 	"strings"
 	"time"
 )
@@ -12,28 +12,45 @@ type Groupings struct {
 	Rooms  []string `json:"rooms"`
 }
 
-type groupingsResponse struct {
-	XMLName    xml.Name `xml:"plan-zajec"`
-	Grupowanie []struct {
-		Typ   originalScheduleType `xml:"typ,attr"`
-		Grupa string               `xml:"grupa,attr"`
-	} `xml:"grupowanie"`
-}
-
 func (c *Client) GetGroupings(ctx context.Context) (*Groupings, time.Time, error) {
-	const groupingsUrl = baseUrl + "?xml"
-
-	return withCache(c.cacheStore, groupingsUrl, c.cacheTimeGroupings, func() (*Groupings, error) {
-		res := groupingsResponse{}
-		if err := c.fetchAndUnmarshalXML(ctx, groupingsUrl, &res); err != nil {
-			return nil, err
+	if c.cfg.Cache != nil {
+		if groupings, validUntil, ok := c.cfg.Cache.GetGroupings(ctx); ok {
+			return groupings, validUntil, nil
 		}
+	}
 
-		return res.extractGroupings(), nil
-	})
+	freshGroupings, freshGroupingsExpirationDate, _, _, err := c.getFreshGroupingsAndPeriods(ctx)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
+
+	return freshGroupings, freshGroupingsExpirationDate, nil
 }
 
-func (res *groupingsResponse) extractGroupings() *Groupings {
+// adding "okres" param always makes response include period info, even in non-schedule calls
+func (c *Client) getFreshGroupingsAndPeriods(ctx context.Context) (*Groupings, time.Time, []SchedulePeriod, time.Time, error) {
+	const groupingsUrl = baseUrl + "?okres=1&xml"
+	res, err := c.fetchAndUnmarshalXML(ctx, groupingsUrl)
+	if err != nil {
+		return nil, time.Time{}, nil, time.Time{}, err
+	}
+	groupingsExpirationDate := time.Now().Add(c.cfg.CacheTimeGroupings)
+	periodsExpirationDate := time.Now().Add(c.cfg.CacheTimePeriods)
+
+	groupings := res.extractGroupings()
+	periods, err := res.extractPeriods()
+	if err != nil {
+		return nil, time.Time{}, nil, time.Time{}, fmt.Errorf("failed to parse periods: %w", err)
+	}
+
+	if c.cfg.Cache != nil {
+		go c.cfg.Cache.PutGroupingsAndPeriods(groupingsExpirationDate, groupings, periodsExpirationDate, periods)
+	}
+
+	return groupings, groupingsExpirationDate, periods, periodsExpirationDate, nil
+}
+
+func (res *responseBody) extractGroupings() *Groupings {
 	groupings := &Groupings{}
 	for _, originalGrouping := range res.Grupowanie {
 		scheduleType, err := originalGrouping.Typ.asNormal()

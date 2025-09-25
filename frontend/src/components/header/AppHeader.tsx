@@ -1,20 +1,14 @@
 import { useEffect } from 'preact/hooks';
 import clsx from 'clsx';
 import uekLogoNoText from '../../assets/uekLogoNoText.svg';
-import {
-    hiddenSubjectsState,
-    SCHEDULE_PERIODS,
-    scheduleIdsState,
-    schedulePeriodSchema,
-    schedulePeriodState,
-    useAppScheduleQuery,
-} from '../../lib/appScheduleQuery';
+import { hiddenSubjectsState, scheduleIdsState, useAppScheduleQuery } from '../../lib/appScheduleQuery';
 import { labels } from '../../lib/intl/labels';
-import { anchorPushStateHandler, updateQueryParams } from '../../lib/state/queryParamsState';
+import { anchorPushStateHandler } from '../../lib/state/queryParamsState';
 import { RoundIconButton } from '../common/RoundIconButton';
 import { AppOptionsDrawer } from './AppOptionsDrawer';
 import { AppOptionsShareButton } from './AppOptionsShareButton';
 import { AppOptionsExportButton } from './AppOptionsExportButton';
+import { SchedulePeriodSelect } from '../other/SchedulePeriodSelect';
 
 export const AppHeader = ({
     isOptionsDrawerOpen,
@@ -27,13 +21,12 @@ export const AppHeader = ({
 
     const currentScheduleIds = scheduleIdsState.use();
     const currentHiddenSubjects = hiddenSubjectsState.use();
-    const currentSchedulePeriod = schedulePeriodState.use();
 
     useEffect(() => {
-        document.title = [query.data?.headers.map((header) => header.name).join(', '), labels.appTitle]
+        document.title = [query.data?.schedule.headers.map((header) => header.name).join(', '), labels.appTitle]
             .filter(Boolean)
             .join(' | ');
-    }, [query.data?.headers]);
+    }, [query.data?.schedule.headers]);
 
     return (
         <div class="shadow-x-bg-primary sticky top-0 z-50 shadow-lg">
@@ -64,7 +57,7 @@ export const AppHeader = ({
                         ) : query.data ? (
                             <>
                                 <span class="truncate text-sm sm:text-base">
-                                    {query.data.headers.map((header) => header.name).join(', ')}
+                                    {query.data.schedule.headers.map((header) => header.name).join(', ')}
                                 </span>
                                 {currentHiddenSubjects.length > 0 && (
                                     <span class="truncate text-xs lg:text-sm">
@@ -90,25 +83,10 @@ export const AppHeader = ({
                 </div>
 
                 <div class="hidden h-full gap-4 lg:flex">
-                    <select
+                    <SchedulePeriodSelect
                         class="border-b-x-bg-quinary hover:border-b-x-cta-primary hover:bg-x-bg-tertiary outline-x-cta-primary cursor-pointer border-b-2 px-2 py-3 transition-colors hover:rounded-t focus-visible:rounded-t focus-visible:outline-2"
-                        value={currentSchedulePeriod}
-                        onChange={(event) =>
-                            updateQueryParams(
-                                'pushState',
-                                schedulePeriodState.createUpdate(schedulePeriodSchema.parse(event.currentTarget.value)),
-                            )
-                        }
-                    >
-                        {SCHEDULE_PERIODS.map((schedulePeriod) => (
-                            <option
-                                key={schedulePeriod}
-                                class="bg-x-bg-tertiary"
-                                value={schedulePeriod}
-                                label={labels.schedulePeriodNames[schedulePeriod]}
-                            />
-                        ))}
-                    </select>
+                        optgroupClass="bg-x-bg-tertiary"
+                    />
                     <div class="hidden xl:contents">
                         <AppOptionsExportButton />
                     </div>

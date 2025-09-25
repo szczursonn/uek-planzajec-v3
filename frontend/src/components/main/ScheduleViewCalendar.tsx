@@ -9,10 +9,11 @@ import { getClosestFutureSunday, getClosestPastMonday } from '../../lib/date/dat
 import { TIME_ZONE } from '../../lib/date/timeZone';
 import { createMoodleURL } from '../../lib/api/common';
 import type { ScheduleItem, ScheduleItemTypeCategory } from '../../lib/api/aggregateSchedule';
-import { schedulePeriodState, useAppScheduleQuery } from '../../lib/appScheduleQuery';
+import { useAppScheduleQuery } from '../../lib/appScheduleQuery';
 import { highlightOnlineOnlyDaysState, LONG_BREAK_THRESHOLD, showLongBreaksState } from '../../lib/scheduleViewConfig';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
+import { useSchedulePeriod } from '../../lib/schedulePeriod';
 
 const getScheduleItemTypeCategoryClass = (category: ScheduleItemTypeCategory) => {
     switch (category) {
@@ -62,7 +63,7 @@ const formatItemRelativeTime = (itemDate: Date, now: Date) => {
 export const ScheduleViewCalendar = () => {
     const query = useAppScheduleQuery();
     const currentDate = useCurrentDate('minute');
-    const isCurrentSchedulePeriodUpcoming = schedulePeriodState.use() === 'upcoming';
+    const isCurrentSchedulePeriodUpcoming = useSchedulePeriod()[0] === 'inferUpcoming';
     const currentShowLongBreaks = showLongBreaksState.use();
     const currentHighlightOnlineOnlyDays = highlightOnlineOnlyDaysState.use();
 
@@ -82,14 +83,14 @@ export const ScheduleViewCalendar = () => {
                 getClosestPastMonday(
                     isCurrentSchedulePeriodUpcoming
                         ? currentDate
-                        : (query.data?.filteredItems[0]?.start.date ?? currentDate),
+                        : (query.data?.schedule.filteredItems[0]?.start.date ?? currentDate),
                 ),
             ),
             DateParts.fromDate(
                 getClosestFutureSunday(
                     new Date(
                         Math.max(
-                            query.data?.filteredItems.at(-1)?.start.date.getTime() ?? currentDate.getTime(),
+                            query.data?.schedule.filteredItems.at(-1)?.start.date.getTime() ?? currentDate.getTime(),
                             currentDate.getTime(),
                         ),
                     ),
@@ -104,8 +105,8 @@ export const ScheduleViewCalendar = () => {
                 items: [],
             } as (typeof dayColumns)[number];
 
-            while (currentItemIndex < (query.data?.filteredItems.length ?? 0)) {
-                const item = query.data!.filteredItems[currentItemIndex]!;
+            while (currentItemIndex < (query.data?.schedule.filteredItems.length ?? 0)) {
+                const item = query.data!.schedule.filteredItems[currentItemIndex]!;
                 if (!item.start.parts.isEqualWithoutTime(dateParts)) {
                     break;
                 }
@@ -119,13 +120,13 @@ export const ScheduleViewCalendar = () => {
         }
 
         return dayColumns;
-    }, [query.data?.filteredItems, currentDate.getTime(), isCurrentSchedulePeriodUpcoming]);
+    }, [query.data?.schedule.filteredItems, currentDate.getTime(), isCurrentSchedulePeriodUpcoming]);
 
     let hasFutureItemOutlineBeenRendered = false;
 
     return (
         <ul class="3xl:px-[10%] grid w-full grid-cols-1 gap-x-1 gap-y-4 p-4 sm:grid-cols-7 sm:gap-x-2 sm:gap-y-10 xl:px-[5%]">
-            {query.data?.filteredItems.length === 0 && (
+            {query.data?.schedule.filteredItems.length === 0 && (
                 <span class="text-center text-xl font-semibold sm:hidden">{labels.noScheduleItemsMessage}</span>
             )}
             {query.isLoading
@@ -230,19 +231,20 @@ export const ScheduleViewCalendar = () => {
                                               </span>
                                               <div class="flex flex-wrap items-center gap-x-1">
                                                   <span class="font-medium whitespace-nowrap">
-                                                      {`${item.start.parts.toTimeString()}-${item.end.parts.toTimeString()}`}
+                                                      {`${item.start.parts.toTimeString()}-${item.end.parts.toTimeString()} (${labels.durationHoursAndMinutesShort(item.end.date.getTime() - item.start.date.getTime())})`}
                                                   </span>
-                                                  {item.room &&
-                                                      (item.isOnline ? (
-                                                          <span class="text-x-online-item-highlight font-semibold">
-                                                              {labels.online}
-                                                          </span>
-                                                      ) : (
-                                                          <span class="truncate" title={item.room.name}>
-                                                              {labels.inX(item.room.name)}
-                                                          </span>
-                                                      ))}
+                                                  {item.room && item.isOnline && (
+                                                      <span class="text-x-online-item-highlight font-semibold">
+                                                          {labels.online}
+                                                      </span>
+                                                  )}
                                               </div>
+                                              {item.room && !item.isOnline && (
+                                                  <div class="flex items-center gap-1.5">
+                                                      <Icon name="pin" class="h-2 w-2 shrink-0 lg:h-3 lg:w-3" />
+                                                      <span class="truncate">{item.room.name}</span>
+                                                  </div>
+                                              )}
                                               {item.lecturers.map((lecturer) => (
                                                   <div class="flex items-center gap-1.5">
                                                       <Icon name="person" class="h-2 w-2 shrink-0 lg:h-3 lg:w-3" />
@@ -253,7 +255,7 @@ export const ScheduleViewCalendar = () => {
                                                               href={createMoodleURL(lecturer.moodleId)}
                                                               title={labels.eBusinessCardForX(lecturer.name)}
                                                               target="_blank"
-                                                              class="focus-visible:outline-x-cta-primary active:text-x-text-default-muted transition-colors hover:underline focus-visible:outline-3"
+                                                              class="focus-visible:outline-x-cta-primary active:text-x-text-default-muted truncate transition-colors hover:underline focus-visible:outline-3"
                                                           >
                                                               {lecturer.name}
                                                           </a>

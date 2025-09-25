@@ -15,6 +15,7 @@ import (
 	"github.com/szczursonn/uek-planzajec-v3/internal/server"
 	"github.com/szczursonn/uek-planzajec-v3/internal/uek"
 	"github.com/szczursonn/uek-planzajec-v3/internal/uekmock"
+	"github.com/szczursonn/uek-planzajec-v3/internal/ueksqlitecache"
 )
 
 func main() {
@@ -62,7 +63,30 @@ func runMockDownload(logger *slog.Logger, downloadUrl string) int {
 }
 
 func runServer(logger *slog.Logger) int {
-	uekClientConfig := getUEKClientConfig()
+	uekClientConfig := uek.ClientConfig{
+		CacheTimeGroupings: env.GetCacheTimeGroupings(),
+		CacheTimeHeaders:   env.GetCacheTimeHeaders(),
+		CacheTimeSchedules: env.GetCacheTimeSchedules(),
+		CacheTimePeriods:   env.GetCacheTimePeriods(),
+	}
+
+	sqliteCachePath := env.GetSqliteCachePath()
+	if sqliteCachePath != "" {
+		sqliteCache, err := ueksqlitecache.New(context.Background(), sqliteCachePath, logger.With("source", "sqliteCache"))
+		if err != nil {
+			logger.Error("Failed to set up sqlite cache", slog.Any("err", err))
+		} else {
+			defer sqliteCache.Close()
+			uekClientConfig.Cache = sqliteCache
+		}
+	}
+
+	if env.GetIsMock() {
+		uekClientConfig.HttpClient = &http.Client{
+			Transport: uekmock.RoundTripper(env.GetIsMockPassthrough(), env.GetMockDelay()),
+		}
+	}
+
 	uekClient, err := uek.NewClient(uekClientConfig)
 	if err != nil {
 		logger.Error("Failed to initialize uek client", slog.Any("err", err))
@@ -78,8 +102,8 @@ func runServer(logger *slog.Logger) int {
 	go func() {
 		logger.Info("Server started",
 			slog.String("addr", serverAddr),
-			slog.Group("periodId", slog.Int("currentYear", uekClientConfig.CurrentYearPeriodId), slog.Int("lastYear", uekClientConfig.LastYearPeriodId)),
-			slog.Group("cacheTimes", slog.String("groupings", uekClientConfig.CacheTimeGroupings.String()), slog.String("headers", uekClientConfig.CacheTimeHeaders.String()), slog.String("schedules", uekClientConfig.CacheTimeSchedules.String())),
+			slog.String("sqliteCachePath", sqliteCachePath),
+			slog.Group("cacheTimes", slog.String("groupings", uekClientConfig.CacheTimeGroupings.String()), slog.String("headers", uekClientConfig.CacheTimeHeaders.String()), slog.String("schedules", uekClientConfig.CacheTimeSchedules.String()), slog.String("periods", uekClientConfig.CacheTimePeriods.String())),
 		)
 		if err := srv.Run(); err != nil {
 			logger.Error("Server stopped unexpectedly", slog.Any("err", err))
@@ -104,22 +128,4 @@ func runServer(logger *slog.Logger) int {
 	logger.Info("Shut down gracefully")
 
 	return 0
-}
-
-func getUEKClientConfig() *uek.ClientConfig {
-	uekClientConfig := &uek.ClientConfig{
-		CacheTimeGroupings:  env.GetCacheTimeGroupings(),
-		CacheTimeHeaders:    env.GetCacheTimeHeaders(),
-		CacheTimeSchedules:  env.GetCacheTimeSchedules(),
-		CurrentYearPeriodId: env.GetPeriodCurrentYearId(),
-		LastYearPeriodId:    env.GetPeriodLastYearId(),
-	}
-
-	if env.GetIsMock() {
-		uekClientConfig.HttpClient = &http.Client{
-			Transport: uekmock.RoundTripper(env.GetIsMockPassthrough(), env.GetMockDelay()),
-		}
-	}
-
-	return uekClientConfig
 }

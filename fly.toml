@@ -12,6 +12,10 @@ handlers = ["tls"]
 port = 443
 tls_options = { "alpn" = ["h2"] }
 
+[mounts]
+source = "uek_cache"
+destination = "/uek_cache/cache.db"
+
 
 [[vm]]
 size = 'shared-cpu-1x'

@@ -9,18 +9,18 @@ import (
 )
 
 type AggregateSchedule struct {
-	Headers []*ScheduleHeader `json:"headers"`
-	Items   []*ScheduleItem   `json:"items"`
+	Headers []ScheduleHeader `json:"headers"`
+	Items   []*ScheduleItem  `json:"items"`
 }
 
-func (c *Client) GetAggregateSchedule(ctx context.Context, scheduleType ScheduleType, scheduleIds []int, lastYear bool) (*AggregateSchedule, time.Time, error) {
+func (c *Client) GetAggregateSchedule(ctx context.Context, scheduleType ScheduleType, scheduleIds []int, periodId int) (*AggregateSchedule, time.Time, error) {
 	eg, egCtx := errgroup.WithContext(ctx)
-	singleSchedules := make([]*singleSchedule, len(scheduleIds))
+	singleSchedules := make([]*Schedule, len(scheduleIds))
 	cacheExpirationDates := make([]time.Time, len(scheduleIds))
 
 	for i, scheduleId := range scheduleIds {
 		eg.Go(func() (err error) {
-			singleSchedules[i], cacheExpirationDates[i], err = c.getSingleSchedule(egCtx, scheduleType, scheduleId, lastYear)
+			singleSchedules[i], cacheExpirationDates[i], err = c.getSchedule(egCtx, scheduleType, scheduleId, periodId)
 			return
 		})
 	}
@@ -64,12 +64,12 @@ func (item *ScheduleItem) ShallowCopy() *ScheduleItem {
 }
 
 // sorted lists merge + deduping without additional sorting
-func mergeSchedules(singleSchedules []*singleSchedule) *AggregateSchedule {
-	headers := make([]*ScheduleHeader, 0, len(singleSchedules))
+func mergeSchedules(singleSchedules []*Schedule) *AggregateSchedule {
+	headers := make([]ScheduleHeader, 0, len(singleSchedules))
 	totalItemCount := 0
 	for _, schedule := range singleSchedules {
-		headers = append(headers, schedule.header)
-		totalItemCount += len(schedule.items)
+		headers = append(headers, schedule.Header)
+		totalItemCount += len(schedule.Items)
 	}
 
 	items := make([]*ScheduleItem, 0, totalItemCount)
@@ -79,7 +79,7 @@ func mergeSchedules(singleSchedules []*singleSchedule) *AggregateSchedule {
 		var nextItemScheduleIndex int
 
 		for scheduleIndex, currentItemIndex := range currentItemIndexesBySchedule {
-			scheduleItems := singleSchedules[scheduleIndex].items
+			scheduleItems := singleSchedules[scheduleIndex].Items
 			if currentItemIndex == len(scheduleItems) {
 				continue
 			}

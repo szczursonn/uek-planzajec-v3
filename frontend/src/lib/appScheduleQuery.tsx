@@ -6,6 +6,7 @@ import { MAX_SELECTABLE_SCHEDULES, useAggregateScheduleAPI } from './api/aggrega
 import { stripTime } from './date/dateUtils';
 import { useCurrentDate } from './date/useCurrentDate';
 import { createQueryParamState, createEnumQueryParamState } from './state/queryParamsState';
+import { useSchedulePeriod } from './schedulePeriod';
 
 export const scheduleIdsState = (() => {
     const LIST_SEPERATOR = '_';
@@ -34,12 +35,6 @@ export const scheduleIdsState = (() => {
 const DEFAULT_SCHEDULE_TYPE = 'group' satisfies ScheduleType;
 export const scheduleTypeState = createEnumQueryParamState('type', scheduleTypeSchema, DEFAULT_SCHEDULE_TYPE);
 
-export const SCHEDULE_PERIODS = ['upcoming', 'currentYear', 'lastYear'] as const;
-export const schedulePeriodSchema = z.enum([...SCHEDULE_PERIODS]);
-export type SchedulePeriod = z.infer<typeof schedulePeriodSchema>;
-const DEFAULT_SCHEDULE_PERIOD = 'upcoming' satisfies SchedulePeriod;
-export const schedulePeriodState = createEnumQueryParamState('period', schedulePeriodSchema, DEFAULT_SCHEDULE_PERIOD);
-
 export const hiddenSubjectsState = (() => {
     const schema = z.array(z.string());
     const sortAndDeduplicate = (subjects: string[]) => Array.from(new Set(subjects)).sort((a, b) => a.localeCompare(b));
@@ -67,18 +62,23 @@ export const hiddenSubjectsState = (() => {
 const useAppScheduleQueryData = () => {
     const scheduleType = scheduleTypeState.use();
     const scheduleIds = scheduleIdsState.use();
-    const schedulePeriod = schedulePeriodState.use();
+    const [schedulePeriod] = useSchedulePeriod();
     const hiddenSubjects = hiddenSubjectsState.use();
 
-    const query = useAggregateScheduleAPI(scheduleType, scheduleIds, schedulePeriod === 'lastYear');
+    const query = useAggregateScheduleAPI(
+        scheduleType,
+        scheduleIds,
+        typeof schedulePeriod === 'number' ? schedulePeriod : null,
+    );
 
     const currentDateWithoutTimeTimestamp = stripTime(useCurrentDate('day')).getTime();
     const filteredItems = useMemo(
         () =>
-            query.data?.items.filter(
+            query.data?.schedule.items.filter(
                 (item) =>
                     !hiddenSubjects.includes(item.subject) &&
-                    (schedulePeriod !== 'upcoming' || item.start.date.getTime() >= currentDateWithoutTimeTimestamp),
+                    (schedulePeriod !== 'inferUpcoming' ||
+                        item.start.date.getTime() >= currentDateWithoutTimeTimestamp),
             ) ?? [],
         [query.data, hiddenSubjects, schedulePeriod],
     );
@@ -87,7 +87,10 @@ const useAppScheduleQueryData = () => {
         ...query,
         data: query.data && {
             ...query.data,
-            filteredItems,
+            schedule: {
+                ...query.data.schedule,
+                filteredItems,
+            },
         },
     };
 };

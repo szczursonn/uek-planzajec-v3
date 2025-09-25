@@ -17,6 +17,7 @@ type Server struct {
 }
 
 func New(addr string, uek *uek.Client, logger *slog.Logger) *Server {
+	// enable h2c
 	protocols := &http.Protocols{}
 	protocols.SetHTTP1(true)
 	protocols.SetUnencryptedHTTP2(true)

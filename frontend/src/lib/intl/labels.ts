@@ -62,11 +62,10 @@ export const otherLinks = 'Inne';
 export const saveCTA = 'Zapisz';
 export const saveScheduleCTA = 'Zapisz plan zajęć';
 export const saved = 'Zapisane';
-export const schedulePeriodNames = {
-    upcoming: 'Nadchodzące zajęcia',
-    currentYear: 'Obecny rok',
-    lastYear: 'Poprzedni rok',
-} as const;
+export const schedulePeriodCategoryPresets = 'Rekomendowane';
+export const schedulePeriodCategoryOthers = 'Inne';
+export const schedulePeriodUpcoming = 'Nadchodzące zajęcia';
+export const schedulePeriodCurrentYear = 'Obecny rok';
 export const scheduleTypeNames = {
     group: 'Grupy',
     lecturer: 'Wykładowcy',

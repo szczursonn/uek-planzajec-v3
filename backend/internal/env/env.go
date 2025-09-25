@@ -27,21 +27,11 @@ func GetServerAddr() string {
 	return value
 }
 
-func GetPeriodCurrentYearId() int {
-	const envKey = envPrefix + "PERIOD_CURRENT"
-	return getEnvInt(envKey)
-}
-
-func GetPeriodLastYearId() int {
-	const envKey = envPrefix + "PERIOD_LAST"
-	return getEnvInt(envKey)
-}
-
 func GetCacheTimeGroupings() time.Duration {
 	const envKey = envPrefix + "CACHE_GROUPINGS"
 	value := getEnvDuration(envKey)
 	if value <= 0 {
-		return 12 * time.Hour
+		return 2 * time.Hour
 	}
 
 	return value
@@ -51,7 +41,7 @@ func GetCacheTimeHeaders() time.Duration {
 	const envKey = envPrefix + "CACHE_HEADERS"
 	value := getEnvDuration(envKey)
 	if value <= 0 {
-		return 12 * time.Hour
+		return 2 * time.Hour
 	}
 
 	return value
@@ -61,10 +51,25 @@ func GetCacheTimeSchedules() time.Duration {
 	const envKey = envPrefix + "CACHE_SCHEDULES"
 	value := getEnvDuration(envKey)
 	if value <= 0 {
-		return 30 * time.Minute
+		return 15 * time.Minute
 	}
 
 	return value
+}
+
+func GetCacheTimePeriods() time.Duration {
+	const envKey = envPrefix + "CACHE_PERIODS"
+	value := getEnvDuration(envKey)
+	if value <= 0 {
+		return 2 * time.Hour
+	}
+
+	return value
+}
+
+func GetSqliteCachePath() string {
+	const envKey = envPrefix + "CACHE_SQLITE_PATH"
+	return getEnvString(envKey)
 }
 
 func GetIsMock() bool {

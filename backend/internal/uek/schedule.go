@@ -2,7 +2,6 @@ package uek
 
 import (
 	"context"
-	"encoding/xml"
 	"fmt"
 	"regexp"
 	"slices"
@@ -11,9 +10,9 @@ import (
 	"time"
 )
 
-type singleSchedule struct {
-	header *ScheduleHeader
-	items  []*ScheduleItem
+type Schedule struct {
+	Header ScheduleHeader  `json:"header"`
+	Items  []*ScheduleItem `json:"items"`
 }
 
 type ScheduleItem struct {
@@ -37,33 +36,6 @@ type ScheduleItemRoom struct {
 	URL  string `json:"url,omitempty"`
 }
 
-type scheduleResponse struct {
-	XMLName xml.Name             `xml:"plan-zajec"`
-	Typ     originalScheduleType `xml:"typ,attr"`
-	Id      string               `xml:"id,attr"`
-	Idcel   string               `xml:"idcel,attr"`
-	Nazwa   string               `xml:"nazwa,attr"`
-	Okres   []struct {
-		Od      string `xml:"od,attr"`
-		Do      string `xml:"do,attr"`
-		Wybrany string `xml:"wybrany,attr"`
-	} `xml:"okres"`
-	Zajecia []struct {
-		Termin     string `xml:"termin"`
-		OdGodz     string `xml:"od-godz"`
-		DoGodz     string `xml:"do-godz"`
-		Przedmiot  string `xml:"przedmiot"`
-		Typ        string `xml:"typ"`
-		Nauczyciel []struct {
-			Moodle string `xml:"moodle,attr"`
-			Nazwa  string `xml:",chardata"`
-		} `xml:"nauczyciel"`
-		Sala  string `xml:"sala"`
-		Grupa string `xml:"grupa"`
-		Uwagi string `xml:"uwagi"`
-	} `xml:"zajecia"`
-}
-
 func (a *ScheduleItem) Compare(b *ScheduleItem) int {
 	startCompareResult := a.Start.Compare(b.Start)
 	if startCompareResult != 0 {
@@ -83,50 +55,57 @@ func (a *ScheduleItem) Compare(b *ScheduleItem) int {
 	return strings.Compare(a.Type, b.Type)
 }
 
-func (c *Client) periodId(lastYear bool) int {
-	if lastYear {
-		return c.lastYearPeriodId
+func (c *Client) getSchedule(ctx context.Context, scheduleType ScheduleType, scheduleId int, periodId int) (*Schedule, time.Time, error) {
+	if c.cfg.Cache != nil {
+		if schedule, validUntil, ok := c.cfg.Cache.GetSchedule(ctx, scheduleType, scheduleId, periodId); ok {
+			return schedule, validUntil, nil
+		}
+	}
+	scheduleExpirationDate := time.Now().Add(c.cfg.CacheTimePeriods)
+	periodsExpirationDate := time.Now().Add(c.cfg.CacheTimePeriods)
+
+	scheduleUrl := fmt.Sprintf("%s?typ=%s&id=%d&okres=%d&xml", baseUrl, scheduleType.asOriginal(), scheduleId, periodId)
+
+	res, err := c.fetchAndUnmarshalXML(ctx, scheduleUrl)
+	if err != nil {
+		return nil, time.Time{}, err
 	}
 
-	return c.currentYearPeriodId
-}
+	schedule, periods, err := res.extractSchedule(scheduleType, scheduleId)
+	if err != nil {
+		return nil, time.Time{}, err
+	}
 
-func (c *Client) getSingleSchedule(ctx context.Context, scheduleType ScheduleType, scheduleId int, lastYear bool) (*singleSchedule, time.Time, error) {
-	scheduleUrl := fmt.Sprintf("%s?typ=%s&id=%d&okres=%d&xml", baseUrl, scheduleType.asOriginal(), scheduleId, c.periodId(lastYear))
+	if c.cfg.Cache != nil {
+		go c.cfg.Cache.PutScheduleAndPeriods(scheduleExpirationDate, scheduleType, scheduleId, periodId, schedule, periodsExpirationDate, periods)
+	}
 
-	return withCache(c.cacheStore, scheduleUrl, c.cacheTimeSchedules, func() (*singleSchedule, error) {
-		res := scheduleResponse{}
-		if err := c.fetchAndUnmarshalXML(ctx, scheduleUrl, &res); err != nil {
-			return nil, err
-		}
-
-		return res.process(scheduleType, scheduleId)
-	})
+	return schedule, scheduleExpirationDate, nil
 }
 
 var scheduleItemRoomLinkRegex = regexp.MustCompile(`^<a href="(.+)">(.+)<\/a>$`)
 
-func (res *scheduleResponse) process(requestedScheduleType ScheduleType, requestedScheduleId int) (*singleSchedule, error) {
+func (res *responseBody) extractSchedule(requestedScheduleType ScheduleType, requestedScheduleId int) (*Schedule, []SchedulePeriod, error) {
 	receivedScheduleType, err := res.Typ.asNormal()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	if receivedScheduleType != requestedScheduleType {
-		return nil, fmt.Errorf("received different schedule type than requested: %s", receivedScheduleType)
+		return nil, nil, fmt.Errorf("received different schedule type than requested: %s", receivedScheduleType)
 	}
 
 	receivedScheduleId, err := strconv.Atoi(res.Id)
 	if err != nil {
-		return nil, fmt.Errorf("cannot convert schedule id to number: %w", err)
+		return nil, nil, fmt.Errorf("cannot convert schedule id to number: %w", err)
 	}
 
 	if receivedScheduleId != requestedScheduleId {
-		return nil, fmt.Errorf("received different schedule id: %d", receivedScheduleId)
+		return nil, nil, fmt.Errorf("received different schedule id: %d", receivedScheduleId)
 	}
 
 	scheduleName := strings.TrimSpace(res.Nazwa)
 	if scheduleName == "" {
-		return nil, fmt.Errorf("missing schedule name")
+		return nil, nil, fmt.Errorf("missing schedule name")
 	}
 
 	scheduleMoodleId := 0
@@ -134,7 +113,7 @@ func (res *scheduleResponse) process(requestedScheduleType ScheduleType, request
 	if scheduleMoodleIdRaw != "" {
 		scheduleMoodleId, err = parseMoodleId(scheduleMoodleIdRaw)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
@@ -157,7 +136,7 @@ func (res *scheduleResponse) process(requestedScheduleType ScheduleType, request
 			item.Type = strings.ToLower(strings.TrimSpace(resItem.Typ))
 			item.Subject = strings.TrimSpace(resItem.Przedmiot)
 
-			// remove language slots
+			// remove language slots, who cares
 			if item.Type == "lektorat" && strings.HasSuffix(item.Subject, "grupa przedmiotów") {
 				return
 			}
@@ -239,7 +218,7 @@ func (res *scheduleResponse) process(requestedScheduleType ScheduleType, request
 			items = append(items, item)
 			return
 		}(); err != nil {
-			return nil, fmt.Errorf("%w at item index %d", err, i)
+			return nil, nil, fmt.Errorf("%w at item index %d", err, i)
 		}
 	}
 
@@ -247,13 +226,18 @@ func (res *scheduleResponse) process(requestedScheduleType ScheduleType, request
 		return a.Compare(b)
 	})
 
-	return &singleSchedule{
-		header: &ScheduleHeader{
+	periods, err := res.extractPeriods()
+	if err != nil {
+		return nil, nil, fmt.Errorf("failed to extract periods: %w", err)
+	}
+
+	return &Schedule{
+		Header: ScheduleHeader{
 			Id:   receivedScheduleId,
 			Name: scheduleName,
 		},
-		items: items,
-	}, nil
+		Items: items,
+	}, periods, nil
 }
 
 func parseMoodleId(moodleIdStr string) (int, error) {
@@ -267,7 +251,7 @@ func parseMoodleId(moodleIdStr string) (int, error) {
 	return moodleId, nil
 }
 
-var location = func() *time.Location {
+var uekLocation = func() *time.Location {
 	loc, err := time.LoadLocation("Europe/Warsaw")
 	if err != nil {
 		panic(fmt.Errorf("failed to load timezone data: %w", err))
@@ -277,5 +261,5 @@ var location = func() *time.Location {
 }()
 
 func parseScheduleDate(input string) (time.Time, error) {
-	return time.ParseInLocation("2006-01-02 15:04", input, location)
+	return time.ParseInLocation("2006-01-02 15:04", input, uekLocation)
 }

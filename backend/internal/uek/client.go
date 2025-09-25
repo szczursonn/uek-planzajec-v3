@@ -6,74 +6,112 @@ import (
 	"fmt"
 	"net/http"
 	"time"
-
-	"github.com/patrickmn/go-cache"
 )
 
 const baseUrl = "https://planzajec.uek.krakow.pl/index.php"
 const UserAgent = "uek-planzajec-v3/1.0 (+https://uek-planzajec-v3.fly.dev)"
 
 type ClientConfig struct {
-	HttpClient          *http.Client
-	CacheTimeGroupings  time.Duration
-	CacheTimeHeaders    time.Duration
-	CacheTimeSchedules  time.Duration
-	CurrentYearPeriodId int
-	LastYearPeriodId    int
+	HttpClient         *http.Client
+	Cache              Cache
+	CacheTimeGroupings time.Duration
+	CacheTimeHeaders   time.Duration
+	CacheTimeSchedules time.Duration
+	CacheTimePeriods   time.Duration
 }
 
 func (cfg *ClientConfig) validate() error {
-	if cfg.CurrentYearPeriodId <= 0 {
-		return fmt.Errorf("invalid or missing current year period id")
+	if cfg.CacheTimeGroupings < 0 {
+		return fmt.Errorf("negative cache time groupings duration")
 	}
 
-	if cfg.LastYearPeriodId <= 0 {
-		return fmt.Errorf("invalid or missing last year period id")
+	if cfg.CacheTimeHeaders < 0 {
+		return fmt.Errorf("negative cache time headers duration")
+	}
+
+	if cfg.CacheTimeSchedules < 0 {
+		return fmt.Errorf("negative cache time schedules duration")
+	}
+
+	if cfg.CacheTimePeriods < 0 {
+		return fmt.Errorf("negative cache time periods duration")
 	}
 
 	return nil
 }
 
 type Client struct {
-	httpClient             *http.Client
-	cacheStore             *cache.Cache
-	cacheTimeGroupings     time.Duration
-	cacheTimeHeaders       time.Duration
-	cacheTimeSchedules     time.Duration
-	currentYearPeriodId    int
-	lastYearPeriodId       int
+	cfg                    ClientConfig
 	selfRateLimitSemaphore chan struct{}
 }
 
-func NewClient(cfg *ClientConfig) (*Client, error) {
+type Cache interface {
+	GetGroupings(ctx context.Context) (*Groupings, time.Time, bool)
+	PutGroupingsAndPeriods(cacheExpirationDateGroupings time.Time, groupings *Groupings, cacheExpirationDatePeriods time.Time, periods []SchedulePeriod)
+
+	GetHeaders(ctx context.Context, scheduleType ScheduleType, groupingName string) ([]ScheduleHeader, time.Time, bool)
+	PutHeaders(cacheExpirationDate time.Time, scheduleType ScheduleType, groupingName string, headers []ScheduleHeader)
+
+	GetSchedule(ctx context.Context, scheduleType ScheduleType, scheduleId int, periodId int) (*Schedule, time.Time, bool)
+	PutScheduleAndPeriods(cacheExpirationDateSchedule time.Time, scheduleType ScheduleType, scheduleId int, periodId int, schedule *Schedule, cacheExpirationDatePeriods time.Time, periods []SchedulePeriod)
+
+	GetPeriods(ctx context.Context) ([]SchedulePeriod, time.Time, bool)
+}
+
+func NewClient(cfg ClientConfig) (*Client, error) {
 	if err := cfg.validate(); err != nil {
 		return nil, err
 	}
 
 	client := &Client{
-		httpClient:          cfg.HttpClient,
-		cacheStore:          cache.New(0, time.Minute),
-		cacheTimeGroupings:  cfg.CacheTimeGroupings,
-		cacheTimeHeaders:    cfg.CacheTimeHeaders,
-		cacheTimeSchedules:  cfg.CacheTimeSchedules,
-		currentYearPeriodId: cfg.CurrentYearPeriodId,
-		lastYearPeriodId:    cfg.LastYearPeriodId,
+		cfg: cfg,
 		// when there are 2+ concurrent requests response times get extremely long - waterfalls are faster
 		// 2+1 requests - 300-400ms, 3 requests - 1000+ms
 		selfRateLimitSemaphore: make(chan struct{}, 2),
 	}
 
-	if client.httpClient == nil {
-		client.httpClient = http.DefaultClient
-	}
-
 	return client, nil
 }
 
-func (c *Client) fetchAndUnmarshalXML(ctx context.Context, targetUrl string, valuePointer any) error {
+type responseBody struct {
+	XMLName xml.Name             `xml:"plan-zajec"`
+	Typ     originalScheduleType `xml:"typ,attr"`
+	Id      string               `xml:"id,attr"`
+	Idcel   string               `xml:"idcel,attr"`
+	Nazwa   string               `xml:"nazwa,attr"`
+	Okres   []struct {
+		Od string `xml:"od,attr"`
+		Do string `xml:"do,attr"`
+	} `xml:"okres"`
+	Grupowanie []struct {
+		Typ   originalScheduleType `xml:"typ,attr"`
+		Grupa string               `xml:"grupa,attr"`
+	} `xml:"grupowanie"`
+	Zasob []struct {
+		Typ   originalScheduleType `xml:"typ,attr"`
+		Id    string               `xml:"id,attr"`
+		Nazwa string               `xml:"nazwa,attr"`
+	} `xml:"zasob"`
+	Zajecia []struct {
+		Termin     string `xml:"termin"`
+		OdGodz     string `xml:"od-godz"`
+		DoGodz     string `xml:"do-godz"`
+		Przedmiot  string `xml:"przedmiot"`
+		Typ        string `xml:"typ"`
+		Nauczyciel []struct {
+			Moodle string `xml:"moodle,attr"`
+			Nazwa  string `xml:",chardata"`
+		} `xml:"nauczyciel"`
+		Sala  string `xml:"sala"`
+		Grupa string `xml:"grupa"`
+		Uwagi string `xml:"uwagi"`
+	} `xml:"zajecia"`
+}
+
+func (c *Client) fetchAndUnmarshalXML(ctx context.Context, targetUrl string) (*responseBody, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, targetUrl, nil)
 	if err != nil {
-		return fmt.Errorf("failed to create request: %w", err)
+		return nil, fmt.Errorf("failed to create request: %w", err)
 	}
 
 	req.Header.Set("User-Agent", UserAgent)
@@ -84,36 +122,25 @@ func (c *Client) fetchAndUnmarshalXML(ctx context.Context, targetUrl string, val
 		<-c.selfRateLimitSemaphore
 	}()
 
-	res, err := c.httpClient.Do(req)
+	httpClient := c.cfg.HttpClient
+	if httpClient == nil {
+		httpClient = http.DefaultClient
+	}
+
+	res, err := httpClient.Do(req)
 	if err != nil {
-		return fmt.Errorf("failed to do request: %w", err)
+		return nil, fmt.Errorf("failed to do request: %w", err)
 	}
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return fmt.Errorf("unexpected status code: %d", res.StatusCode)
+		return nil, fmt.Errorf("unexpected status code: %d", res.StatusCode)
 	}
 
-	if err = xml.NewDecoder(res.Body).Decode(valuePointer); err != nil {
-		return fmt.Errorf("failed to decode xml response: %w", err)
+	resBody := &responseBody{}
+	if err = xml.NewDecoder(res.Body).Decode(resBody); err != nil {
+		return nil, fmt.Errorf("failed to decode xml response: %w", err)
 	}
 
-	return nil
-}
-
-func withCache[T any](cacheStore *cache.Cache, cacheKey string, cacheDuration time.Duration, getFreshValue func() (T, error)) (T, time.Time, error) {
-	if cachedValue, cachedValueExpirationDate, found := cacheStore.GetWithExpiration(cacheKey); found {
-		return cachedValue.(T), cachedValueExpirationDate, nil
-	}
-
-	freshValue, err := getFreshValue()
-	if err != nil {
-		return *new(T), time.Time{}, err
-	}
-
-	if cacheDuration > 0 {
-		cacheStore.Set(cacheKey, freshValue, cacheDuration)
-	}
-
-	return freshValue, time.Now().Add(cacheDuration), nil
+	return resBody, nil
 }
