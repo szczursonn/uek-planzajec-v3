@@ -230,7 +230,7 @@ export const ScheduleViewCalendar = () => {
                                                   {[item.subject, item.type.value].filter(Boolean).join(' - ')}
                                               </span>
                                               <div class="flex flex-wrap items-center gap-x-1">
-                                                  <span class="font-medium whitespace-nowrap">
+                                                  <span class="font-semibold whitespace-nowrap">
                                                       {`${item.start.parts.toTimeString()}-${item.end.parts.toTimeString()} (${labels.durationHoursAndMinutesShort(item.end.date.getTime() - item.start.date.getTime())})`}
                                                   </span>
                                                   {item.room && item.isOnline && (
@@ -241,13 +241,13 @@ export const ScheduleViewCalendar = () => {
                                               </div>
                                               {item.room && !item.isOnline && (
                                                   <div class="flex items-center gap-1.5">
-                                                      <Icon name="pin" class="h-2 w-2 shrink-0 lg:h-3 lg:w-3" />
+                                                      <Icon name="pin" class="h-3 w-3 shrink-0" />
                                                       <span class="truncate">{item.room.name}</span>
                                                   </div>
                                               )}
                                               {item.lecturers.map((lecturer) => (
                                                   <div class="flex items-center gap-1.5">
-                                                      <Icon name="person" class="h-2 w-2 shrink-0 lg:h-3 lg:w-3" />
+                                                      <Icon name="person" class="h-3 w-3 shrink-0" />
 
                                                       {lecturer.moodleId ? (
                                                           <a
