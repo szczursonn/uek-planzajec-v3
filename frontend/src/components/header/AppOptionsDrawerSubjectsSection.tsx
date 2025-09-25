@@ -13,7 +13,7 @@ export const AppOptionsDrawerSubjectsSection = () => {
 
     const subjectsEntries = useMemo(() => {
         const subjectToLecturerNameToItemCount = {} as Record<string, Record<string, number>>;
-        for (const item of query.data?.items ?? []) {
+        for (const item of query.data?.schedule.items ?? []) {
             subjectToLecturerNameToItemCount[item.subject] = subjectToLecturerNameToItemCount[item.subject] ?? {};
             for (const lecturer of item.lecturers) {
                 subjectToLecturerNameToItemCount[item.subject]![lecturer.name] =
@@ -34,7 +34,7 @@ export const AppOptionsDrawerSubjectsSection = () => {
                 isHidden: currentHiddenSubjects.includes(subject),
             }))
             .sort((a, b) => a.subject.localeCompare(b.subject));
-    }, [query.data?.items, currentHiddenSubjects]);
+    }, [query.data?.schedule.items, currentHiddenSubjects]);
 
     const createDerivedURL = useURLCreator();
 

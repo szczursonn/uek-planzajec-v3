@@ -57,8 +57,8 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
     const currentDate = useCurrentDate('minute');
 
     const allSubjectItems = useMemo(
-        () => query.data?.items.filter((item) => item.subject === subject) ?? [],
-        [query.data?.items, subject],
+        () => query.data?.schedule.items.filter((item) => item.subject === subject) ?? [],
+        [query.data?.schedule.items, subject],
     );
 
     const itemTypeInfos = useMemo(() => {

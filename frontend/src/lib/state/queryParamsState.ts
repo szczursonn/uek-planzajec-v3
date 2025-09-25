@@ -1,4 +1,4 @@
-import type { TargetedEvent } from 'preact/compat';
+import type { TargetedEvent } from 'preact';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import type * as z from 'zod/mini';
 

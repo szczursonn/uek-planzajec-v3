@@ -1,4 +1,4 @@
-import { type MouseEventHandler } from 'preact/compat';
+import { type MouseEventHandler } from 'preact';
 import clsx from 'clsx';
 import { Icon, type IconName } from './Icon';
 
