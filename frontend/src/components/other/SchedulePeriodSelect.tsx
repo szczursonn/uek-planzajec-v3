@@ -2,7 +2,7 @@ import { useAppScheduleQuery } from '../../lib/appScheduleQuery';
 import { TIME_ZONE } from '../../lib/date/timeZone';
 import { labels } from '../../lib/intl/labels';
 import { LOCALE } from '../../lib/intl/locale';
-import { schedulePeriodSchema, useSchedulePeriod } from '../../lib/schedulePeriod';
+import { schedulePeriodPresets, schedulePeriodSchema, useSchedulePeriod } from '../../lib/schedulePeriod';
 
 const otherOptionsDateFormatter = new Intl.DateTimeFormat(LOCALE, {
     timeZone: TIME_ZONE.UEK,
@@ -22,6 +22,7 @@ export const SchedulePeriodSelect = ({
 }) => {
     const query = useAppScheduleQuery();
     const [currentSchedulePeriod, setSchedulePeriod] = useSchedulePeriod();
+    const isLoadingDynamicOption = query.isLoading && typeof currentSchedulePeriod === 'number';
 
     return (
         <select
@@ -35,12 +36,19 @@ export const SchedulePeriodSelect = ({
             }}
         >
             <optgroup class={optgroupClass} label={labels.schedulePeriodCategoryPresets}>
-                <option class={optionClass} value="inferUpcoming" label={labels.schedulePeriodUpcoming} />
-                <option class={optionClass} value="inferCurrentYear" label={labels.schedulePeriodCurrentYear} />
+                {schedulePeriodPresets.map((preset) => (
+                    <option
+                        class={optionClass}
+                        key={preset}
+                        value={preset}
+                        label={labels.schedulePeriodPresets[preset]}
+                    />
+                ))}
             </optgroup>
-            {query.data && (
+            {(query.data || isLoadingDynamicOption) && (
                 <optgroup class={optgroupClass} label={labels.schedulePeriodCategoryOthers}>
-                    {query.data.periods.map((period) => (
+                    {isLoadingDynamicOption && <option class={optionClass} value={currentSchedulePeriod} label="..." />}
+                    {query.data?.periods.map((period) => (
                         <option
                             key={period.id}
                             class={optionClass}

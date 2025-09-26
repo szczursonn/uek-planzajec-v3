@@ -34,8 +34,8 @@ func (c *Client) getFreshGroupingsAndPeriods(ctx context.Context) (*Groupings, t
 	if err != nil {
 		return nil, time.Time{}, nil, time.Time{}, err
 	}
-	groupingsExpirationDate := time.Now().Add(c.cfg.CacheTimeGroupings)
-	periodsExpirationDate := time.Now().Add(c.cfg.CacheTimePeriods)
+	groupingsExpirationDate := time.Now().Add(c.cfg.CacheTimes.Groupings)
+	periodsExpirationDate := time.Now().Add(c.cfg.CacheTimes.Periods)
 
 	groupings := res.extractGroupings()
 	periods, err := res.extractPeriods()

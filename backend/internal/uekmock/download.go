@@ -10,7 +10,7 @@ import (
 	"github.com/szczursonn/uek-planzajec-v3/internal/uek"
 )
 
-func DownloadResponse(ctx context.Context, urlAsString string) error {
+func DownloadResponse(ctx context.Context, directoryPath string, urlAsString string) error {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, urlAsString, nil)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func DownloadResponse(ctx context.Context, urlAsString string) error {
 		return err
 	}
 
-	os.Mkdir(mockDirectoryPath, 0644)
+	os.Mkdir(directoryPath, 0644)
 
-	return os.WriteFile(getMockResponseFilePathFromQuery(queryParams), []byte(xmlfmt.FormatXML(string(xmlBuff), "", "\t")), 0644)
+	return os.WriteFile(getMockResponseFilePathFromQuery(directoryPath, queryParams), []byte(xmlfmt.FormatXML(string(xmlBuff), "", "\t")), 0644)
 }

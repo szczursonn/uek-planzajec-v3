@@ -28,7 +28,7 @@ func (srv *Server) registerAPIRoutes() {
 	mux.HandleFunc("GET /api/groupings", srv.debugLoggingMiddleware(srv.handleGroupings))
 	mux.HandleFunc("GET /api/headers", srv.debugLoggingMiddleware(srv.handleHeaders))
 	mux.HandleFunc("GET /api/aggregateSchedule", srv.debugLoggingMiddleware(srv.handleAggregateSchedule))
-	mux.HandleFunc("GET /api/ical/{payload}", (srv.debugLoggingMiddleware(srv.handleICal)))
+	mux.HandleFunc("GET /api/ical/{payload}", srv.debugLoggingMiddleware(srv.handleICal))
 }
 
 func (srv *Server) handleGroupings(w http.ResponseWriter, r *http.Request) {
@@ -90,26 +90,30 @@ func (srv *Server) handleAggregateSchedule(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var requestPeriodId *int
-	if maybeRequestPeriodId, err := strconv.Atoi(queryParams.Get("periodId")); err == nil {
-		requestPeriodId = &maybeRequestPeriodId
-	}
-
 	periods, periodsCacheExpirationDate, err := srv.uek.GetSchedulePeriods(r.Context())
 	if err != nil {
 		respondServiceUnavailable(w)
 		return
 	}
 
-	if requestPeriodId == nil {
-		if requestPeriodId = pickCurrentYearPeriodId(periods); requestPeriodId == nil {
+	requestPeriodIdString := strings.TrimSpace(queryParams.Get("periodId"))
+	var requestPeriodId int
+	if requestPeriodIdString == "" {
+		var ok bool
+		if requestPeriodId, ok = pickCurrentYearPeriodId(periods); !ok {
 			respondServiceUnavailable(w)
 			return
 		}
 	} else {
+		requestPeriodId, err = strconv.Atoi(requestPeriodIdString)
+		if err != nil {
+			respondBadRequest(w)
+			return
+		}
+
 		idFound := false
 		for _, period := range periods {
-			if period.Id == *requestPeriodId {
+			if period.Id == requestPeriodId {
 				idFound = true
 				break
 			}
@@ -121,10 +125,10 @@ func (srv *Server) handleAggregateSchedule(w http.ResponseWriter, r *http.Reques
 		}
 	}
 
-	aggregateSchedule, aggregateScheduleCacheExpirationDate, err := srv.uek.GetAggregateSchedule(r.Context(), scheduleType, scheduleIds, *requestPeriodId)
+	aggregateSchedule, aggregateScheduleCacheExpirationDate, err := srv.uek.GetAggregateSchedule(r.Context(), scheduleType, scheduleIds, requestPeriodId)
 	if err != nil {
 		if !errors.Is(err, context.Canceled) {
-			srv.logger.Error("Failed to get schedule", slog.Group("params", slog.String("scheduleType", string(scheduleType)), slog.Any("scheduleIds", scheduleIds), slog.Int("periodId", *requestPeriodId)), slog.Any("err", err))
+			srv.logger.Error("Failed to get schedule", slog.Group("params", slog.String("scheduleType", string(scheduleType)), slog.Any("scheduleIds", scheduleIds), slog.Int("periodId", requestPeriodId)), slog.Any("err", err))
 		}
 		respondServiceUnavailable(w)
 		return
@@ -165,13 +169,13 @@ func (srv *Server) handleICal(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	currentYearPeriodId := pickCurrentYearPeriodId(periods)
-	if currentYearPeriodId == nil {
+	currentYearPeriodId, ok := pickCurrentYearPeriodId(periods)
+	if !ok {
 		respondServiceUnavailable(w)
 		return
 	}
 
-	aggregateSchedule, aggregateScheduleCacheExpirationDate, err := srv.uek.GetAggregateSchedule(r.Context(), payload.ScheduleType, payload.ScheduleIds, *currentYearPeriodId)
+	aggregateSchedule, aggregateScheduleCacheExpirationDate, err := srv.uek.GetAggregateSchedule(r.Context(), payload.ScheduleType, payload.ScheduleIds, currentYearPeriodId)
 	if err != nil {
 		respondServiceUnavailable(w)
 		return
@@ -265,7 +269,7 @@ func (srv *Server) handleICal(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "END:VCALENDAR")
 }
 
-func pickCurrentYearPeriodId(periods []uek.SchedulePeriod) *int {
+func pickCurrentYearPeriodId(periods []uek.SchedulePeriod) (int, bool) {
 	now := time.Now()
 
 	var longestPeriodContainingNowId *int
@@ -283,5 +287,9 @@ func pickCurrentYearPeriodId(periods []uek.SchedulePeriod) *int {
 		}
 	}
 
-	return longestPeriodContainingNowId
+	if longestPeriodContainingNowId == nil {
+		return 0, false
+	}
+
+	return *longestPeriodContainingNowId, true
 }

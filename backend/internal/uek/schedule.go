@@ -61,12 +61,10 @@ func (c *Client) getSchedule(ctx context.Context, scheduleType ScheduleType, sch
 			return schedule, validUntil, nil
 		}
 	}
-	scheduleExpirationDate := time.Now().Add(c.cfg.CacheTimePeriods)
-	periodsExpirationDate := time.Now().Add(c.cfg.CacheTimePeriods)
+	scheduleExpirationDate := time.Now().Add(c.cfg.CacheTimes.Schedules)
+	periodsExpirationDate := time.Now().Add(c.cfg.CacheTimes.Periods)
 
-	scheduleUrl := fmt.Sprintf("%s?typ=%s&id=%d&okres=%d&xml", baseUrl, scheduleType.asOriginal(), scheduleId, periodId)
-
-	res, err := c.fetchAndUnmarshalXML(ctx, scheduleUrl)
+	res, err := c.fetchAndUnmarshalXML(ctx, fmt.Sprintf("%s?typ=%s&id=%d&okres=%d&xml", baseUrl, scheduleType.asOriginal(), scheduleId, periodId))
 	if err != nil {
 		return nil, time.Time{}, err
 	}

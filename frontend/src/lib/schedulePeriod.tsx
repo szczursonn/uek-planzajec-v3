@@ -2,7 +2,9 @@ import { ComponentChildren, createContext } from 'preact';
 import { useContext, useState } from 'preact/hooks';
 import * as z from 'zod/mini';
 
-export const schedulePeriodSchema = z.union([z.enum(['inferUpcoming', 'inferCurrentYear']), z.number()]);
+export const schedulePeriodPresets = ['inferUpcoming', 'inferCurrentYear'] as const;
+
+export const schedulePeriodSchema = z.union([z.enum(schedulePeriodPresets), z.number()]);
 export type SchedulePeriod = z.infer<typeof schedulePeriodSchema>;
 
 const useSchedulePeriodContextManager = () => {

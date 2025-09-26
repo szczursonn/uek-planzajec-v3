@@ -6,38 +6,17 @@ import (
 	"fmt"
 	"net/http"
 	"time"
+
+	"github.com/szczursonn/uek-planzajec-v3/internal/config"
 )
 
 const baseUrl = "https://planzajec.uek.krakow.pl/index.php"
 const UserAgent = "uek-planzajec-v3/1.0 (+https://uek-planzajec-v3.fly.dev)"
 
 type ClientConfig struct {
-	HttpClient         *http.Client
-	Cache              Cache
-	CacheTimeGroupings time.Duration
-	CacheTimeHeaders   time.Duration
-	CacheTimeSchedules time.Duration
-	CacheTimePeriods   time.Duration
-}
-
-func (cfg *ClientConfig) validate() error {
-	if cfg.CacheTimeGroupings < 0 {
-		return fmt.Errorf("negative cache time groupings duration")
-	}
-
-	if cfg.CacheTimeHeaders < 0 {
-		return fmt.Errorf("negative cache time headers duration")
-	}
-
-	if cfg.CacheTimeSchedules < 0 {
-		return fmt.Errorf("negative cache time schedules duration")
-	}
-
-	if cfg.CacheTimePeriods < 0 {
-		return fmt.Errorf("negative cache time periods duration")
-	}
-
-	return nil
+	HttpClient *http.Client
+	Cache      Cache
+	CacheTimes config.CacheTimes
 }
 
 type Client struct {
@@ -58,19 +37,13 @@ type Cache interface {
 	GetPeriods(ctx context.Context) ([]SchedulePeriod, time.Time, bool)
 }
 
-func NewClient(cfg ClientConfig) (*Client, error) {
-	if err := cfg.validate(); err != nil {
-		return nil, err
-	}
-
-	client := &Client{
+func NewClient(cfg ClientConfig) *Client {
+	return &Client{
 		cfg: cfg,
 		// when there are 2+ concurrent requests response times get extremely long - waterfalls are faster
 		// 2+1 requests - 300-400ms, 3 requests - 1000+ms
 		selfRateLimitSemaphore: make(chan struct{}, 2),
 	}
-
-	return client, nil
 }
 
 type responseBody struct {

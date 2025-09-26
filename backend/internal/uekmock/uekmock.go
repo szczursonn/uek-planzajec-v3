@@ -7,9 +7,7 @@ import (
 	"strings"
 )
 
-const mockDirectoryPath = "./mock"
-
-func getMockResponseFilePathFromQuery(query url.Values) string {
+func getMockResponseFilePathFromQuery(mockDirectoryPath string, query url.Values) string {
 	return path.Join(mockDirectoryPath, fmt.Sprintf("%s-%s-%s-%s.xml", formatMockResponseKeyPart(query.Get("typ")), formatMockResponseKeyPart(query.Get("grupa")), formatMockResponseKeyPart(query.Get("id")), formatMockResponseKeyPart(query.Get("okres"))))
 }
 

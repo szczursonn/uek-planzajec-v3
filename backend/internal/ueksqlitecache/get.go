@@ -34,6 +34,8 @@ func get[T any](c *Cache, ctx context.Context, key string) (value T, expirationD
 	if err := c.getStmt.QueryRowContext(ctx, key).Scan(&buff, &unixSeconds); err != nil {
 		if !errors.Is(err, sql.ErrNoRows) {
 			c.logger.Error("Failed to get value", slog.String("key", key), slog.Any("err", err))
+		} else {
+			c.logger.Debug("Cache get: miss", slog.String("key", key))
 		}
 
 		return
@@ -41,6 +43,7 @@ func get[T any](c *Cache, ctx context.Context, key string) (value T, expirationD
 
 	expirationDate = time.Unix(unixSeconds, 0)
 	if expirationDate.Before(time.Now()) {
+		c.logger.Debug("Cache get: retrieved expired", slog.String("key", key))
 		return
 	}
 
@@ -50,6 +53,7 @@ func get[T any](c *Cache, ctx context.Context, key string) (value T, expirationD
 	}
 
 	ok = true
+	c.logger.Debug("Cache get: hit", slog.String("key", key))
 
 	return
 }

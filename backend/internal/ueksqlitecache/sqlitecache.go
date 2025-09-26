@@ -39,7 +39,7 @@ func New(ctx context.Context, databasePath string, logger *slog.Logger) (*Cache,
 		CREATE TABLE IF NOT EXISTS kv (
 			key					TEXT NOT NULL,
 			blob				BLOB NOT NULL,
-			expiration_date			INTEGER NOT NULL,
+			expiration_date		INTEGER NOT NULL,
 			PRIMARY KEY(key)
 		) WITHOUT ROWID,STRICT;
 	`); err != nil {
@@ -74,6 +74,7 @@ func New(ctx context.Context, databasePath string, logger *slog.Logger) (*Cache,
 }
 
 func (c *Cache) cleanupWorker() {
+	defer c.logger.Debug("Cleanup worker exited")
 	ticker := time.NewTicker(time.Minute)
 	defer ticker.Stop()
 
@@ -84,10 +85,11 @@ func (c *Cache) cleanupWorker() {
 		case <-ticker.C:
 		}
 
-		if _, err := c.cleanupStmt.Exec(time.Now().Unix()); err != nil {
+		if _, err := c.cleanupStmt.ExecContext(c.cleanupWorkerCtx, time.Now().Unix()); err != nil {
 			c.logger.Error("Failed to execute cleanup", slog.Any("err", err))
+		} else {
+			c.logger.Debug("Cleanup done successfully")
 		}
-		c.logger.Debug("Cleanup done successfully")
 	}
 }
 

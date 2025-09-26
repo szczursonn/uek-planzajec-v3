@@ -21,12 +21,11 @@ func (c *Client) GetHeaders(ctx context.Context, scheduleType ScheduleType, grou
 		}
 	}
 
-	headersUrl := fmt.Sprintf("%s?typ=%s&grupa=%s&xml", baseUrl, scheduleType.asOriginal(), url.QueryEscape(groupingName))
-	res, err := c.fetchAndUnmarshalXML(ctx, headersUrl)
+	res, err := c.fetchAndUnmarshalXML(ctx, fmt.Sprintf("%s?typ=%s&grupa=%s&xml", baseUrl, scheduleType.asOriginal(), url.QueryEscape(groupingName)))
 	if err != nil {
 		return nil, time.Time{}, err
 	}
-	expirationDate := time.Now().Add(c.cfg.CacheTimeHeaders)
+	expirationDate := time.Now().Add(c.cfg.CacheTimes.Headers)
 
 	headers := res.extractHeaders(scheduleType)
 

@@ -24,12 +24,16 @@ func (c *Cache) PutScheduleAndPeriods(cacheExpirationDateSchedule time.Time, sch
 }
 
 func put[T any](c *Cache, key string, value T, expirationDate time.Time) {
-	buff := bytes.Buffer{}
-	if err := gob.NewEncoder(&buff).Encode(value); err != nil {
+	buff := &bytes.Buffer{}
+	if err := gob.NewEncoder(buff).Encode(value); err != nil {
 		c.logger.Error("Failed to encode value", slog.String("key", key), slog.Any("err", err))
+		return
 	}
 
 	if _, err := c.upsertStmt.Exec(key, buff.Bytes(), expirationDate.Unix()); err != nil {
 		c.logger.Error("Failed to execute upsert", slog.String("key", key), slog.Any("err", err))
+		return
 	}
+
+	c.logger.Debug("Cache put", slog.String("key", key))
 }
