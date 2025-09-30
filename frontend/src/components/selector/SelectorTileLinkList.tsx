@@ -2,9 +2,9 @@ import type { ComponentChildren } from 'preact';
 import { anchorPushStateHandler } from '../../lib/state/queryParamsState';
 
 export const SelectorTileLinkList = ({ title, children }: { title?: string; children: ComponentChildren }) => (
-    <div class="my-auto flex h-full flex-col items-center justify-center gap-8 lg:gap-16">
+    <div class="mx-4 my-auto flex h-full flex-col items-center justify-center gap-8 lg:mx-16 lg:gap-16">
         {title && <span class="text-center text-4xl font-bold lg:text-5xl">{title}</span>}
-        <div class="flex w-full flex-wrap items-center justify-center gap-12">{children}</div>
+        <div class="flex w-full flex-wrap items-center justify-center gap-6 lg:gap-12">{children}</div>
     </div>
 );
 
@@ -25,7 +25,7 @@ export const SelectorTileLink = ({
         onClick={anchorPushStateHandler}
     >
         {children}
-        <span class="max-w-full text-center font-semibold text-wrap lg:text-xl">{label}</span>
+        <span class="max-w-full p-0.5 text-center font-semibold text-wrap lg:text-xl">{label}</span>
     </a>
 );
 

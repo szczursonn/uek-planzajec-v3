@@ -9,7 +9,7 @@ import { getClosestFutureSunday, getClosestPastMonday } from '../../lib/date/dat
 import { TIME_ZONE } from '../../lib/date/timeZone';
 import { createMoodleURL } from '../../lib/api/common';
 import type { ScheduleItem, ScheduleItemTypeCategory } from '../../lib/api/aggregateSchedule';
-import { useAppScheduleQuery } from '../../lib/appScheduleQuery';
+import { scheduleTypeState, useAppScheduleQuery } from '../../lib/appScheduleQuery';
 import { highlightOnlineOnlyDaysState, LONG_BREAK_THRESHOLD, showLongBreaksState } from '../../lib/scheduleViewConfig';
 import { Icon } from '../common/Icon';
 import { Button } from '../common/Button';
@@ -66,6 +66,7 @@ export const ScheduleViewCalendar = () => {
     const isCurrentSchedulePeriodUpcoming = useSchedulePeriod()[0] === 'inferUpcoming';
     const currentShowLongBreaks = showLongBreaksState.use();
     const currentHighlightOnlineOnlyDays = highlightOnlineOnlyDaysState.use();
+    const currentScheduleType = scheduleTypeState.use();
 
     const dayColumns = useMemo(() => {
         const currentDateParts = DateParts.fromDate(currentDate);
@@ -245,25 +246,34 @@ export const ScheduleViewCalendar = () => {
                                                       <span class="truncate">{item.room.name}</span>
                                                   </div>
                                               )}
-                                              {item.lecturers.map((lecturer) => (
-                                                  <div class="flex items-center gap-1.5">
-                                                      <Icon name="person" class="h-3 w-3 shrink-0" />
+                                              {(currentScheduleType !== 'lecturer' ||
+                                                  query.data!.schedule.headers.length > 1) &&
+                                                  item.lecturers.map((lecturer) => (
+                                                      <div class="flex items-center gap-1.5">
+                                                          <Icon name="person" class="h-3 w-3 shrink-0" />
 
-                                                      {lecturer.moodleId ? (
-                                                          <a
-                                                              key={lecturer.name}
-                                                              href={createMoodleURL(lecturer.moodleId)}
-                                                              title={labels.eBusinessCardForX(lecturer.name)}
-                                                              target="_blank"
-                                                              class="focus-visible:outline-x-cta-primary active:text-x-text-default-muted truncate transition-colors hover:underline focus-visible:outline-3"
-                                                          >
-                                                              {lecturer.name}
-                                                          </a>
-                                                      ) : (
-                                                          <span key={lecturer.name}>{lecturer.name}</span>
-                                                      )}
-                                                  </div>
-                                              ))}
+                                                          {lecturer.moodleId ? (
+                                                              <a
+                                                                  key={lecturer.name}
+                                                                  href={createMoodleURL(lecturer.moodleId)}
+                                                                  title={labels.eBusinessCardForX(lecturer.name)}
+                                                                  target="_blank"
+                                                                  class="focus-visible:outline-x-cta-primary active:text-x-text-default-muted truncate transition-colors hover:underline focus-visible:outline-3"
+                                                              >
+                                                                  {lecturer.name}
+                                                              </a>
+                                                          ) : (
+                                                              <span key={lecturer.name}>{lecturer.name}</span>
+                                                          )}
+                                                      </div>
+                                                  ))}
+                                              {currentScheduleType !== 'group' &&
+                                                  item.groups.map((group) => (
+                                                      <div key={group} class="flex items-center gap-1.5">
+                                                          <Icon name="group" class="h-3 w-3 shrink-0" />
+                                                          <span>{group}</span>
+                                                      </div>
+                                                  ))}
                                               {item.room?.url && (
                                                   <Button
                                                       variant="tertiary"
