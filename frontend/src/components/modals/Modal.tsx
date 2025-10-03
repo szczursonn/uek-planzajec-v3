@@ -66,11 +66,12 @@ export const Modal = ({
         document.body.style.overflow = 'hidden';
 
         dialogElement.showModal();
-        requestAnimationFrame(() => {
+        const animationFrameRequestHandle = requestAnimationFrame(() => {
             dialogElement.classList.add('backdrop:bg-black/80', 'opacity-100');
         });
 
         return () => {
+            cancelAnimationFrame(animationFrameRequestHandle);
             dialogElement.close();
             document.body.style.position = '';
             document.body.style.top = '';

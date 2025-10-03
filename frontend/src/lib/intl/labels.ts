@@ -98,6 +98,7 @@ export const subjects = 'Przedmioty';
 export const subjectDetailsRemainingSectionHeader = 'Pozostało:';
 export const subjectDetailsItemListHeader = 'Lista zajęć';
 export const subjectDetailsLecturersSectionHeader = 'Prowadzący:';
+export const subjectDetailsGroupsSectionHeader = 'Grupy:';
 export const refreshCTA = 'Odśwież';
 export const removeCTA = 'Usuń';
 export const removeSavedScheduleCTA = 'Usuń zapisany plan zajęć';

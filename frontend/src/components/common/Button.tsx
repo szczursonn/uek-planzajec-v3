@@ -46,7 +46,7 @@ export const Button = ({
 }: ButtonProps) => {
     const finalTitle = title || text;
     const finalClassName = clsx(
-        'flex items-center justify-center gap-3 w-full rounded-md py-1.5 px-4 transition-colors',
+        'flex items-center justify-center gap-3 w-full rounded-md py-1.5 px-2 lg:px-4 transition-colors',
         VARIANT_CLASSES[variant],
         disabled
             ? 'cursor-default text-white/60'
@@ -59,7 +59,7 @@ export const Button = ({
 
     const buttonInternals = (
         <>
-            {icon && <Icon name={icon} class={clsx('h-4 w-4 shrink-0', iconClass)} />}
+            {icon && <Icon name={icon} class={clsx('h-4 w-4 shrink-0 md:h-3 md:w-3 lg:h-4 lg:w-4', iconClass)} />}
             {text && <span class="text-center">{text}</span>}
         </>
     );

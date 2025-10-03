@@ -242,15 +242,21 @@ export const ScheduleViewCalendar = () => {
                                               </div>
                                               {item.room && !item.isOnline && (
                                                   <div class="flex items-center gap-1.5">
-                                                      <Icon name="pin" class="h-3 w-3 shrink-0" />
-                                                      <span class="truncate">{item.room.name}</span>
+                                                      <Icon
+                                                          name="pin"
+                                                          class="h-3 w-3 shrink-0 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3"
+                                                      />
+                                                      <span class="lg:not-hover:truncate">{item.room.name}</span>
                                                   </div>
                                               )}
                                               {(currentScheduleType !== 'lecturer' ||
                                                   query.data!.schedule.headers.length > 1) &&
                                                   item.lecturers.map((lecturer) => (
                                                       <div class="flex items-center gap-1.5">
-                                                          <Icon name="person" class="h-3 w-3 shrink-0" />
+                                                          <Icon
+                                                              name="person"
+                                                              class="h-3 w-3 shrink-0 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3"
+                                                          />
 
                                                           {lecturer.moodleId ? (
                                                               <a
@@ -258,7 +264,7 @@ export const ScheduleViewCalendar = () => {
                                                                   href={createMoodleURL(lecturer.moodleId)}
                                                                   title={labels.eBusinessCardForX(lecturer.name)}
                                                                   target="_blank"
-                                                                  class="focus-visible:outline-x-cta-primary active:text-x-text-default-muted truncate transition-colors hover:underline focus-visible:outline-3"
+                                                                  class="focus-visible:outline-x-cta-primary active:text-x-text-default-muted transition-colors hover:underline focus-visible:outline-3 lg:not-hover:truncate"
                                                               >
                                                                   {lecturer.name}
                                                               </a>
@@ -270,7 +276,10 @@ export const ScheduleViewCalendar = () => {
                                               {currentScheduleType !== 'group' &&
                                                   item.groups.map((group) => (
                                                       <div key={group} class="flex items-center gap-1.5">
-                                                          <Icon name="group" class="h-3 w-3 shrink-0" />
+                                                          <Icon
+                                                              name="group"
+                                                              class="h-3 w-3 shrink-0 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3"
+                                                          />
                                                           <span>{group}</span>
                                                       </div>
                                                   ))}

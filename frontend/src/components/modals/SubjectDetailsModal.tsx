@@ -3,6 +3,7 @@ import clsx from 'clsx';
 import { labels } from '../../lib/intl/labels';
 import { LOCALE } from '../../lib/intl/locale';
 import { updateQueryParams, createStringQueryParamState } from '../../lib/state/queryParamsState';
+import { stripTime } from '../../lib/date/dateUtils';
 import { useCurrentDate } from '../../lib/date/useCurrentDate';
 import { TIME_ZONE } from '../../lib/date/timeZone';
 import { createMoodleURL } from '../../lib/api/common';
@@ -55,6 +56,7 @@ export const SubjectDetailsModalHost = () => {
 const SubjectDetailsModal = ({ subject }: { subject: string }) => {
     const query = useAppScheduleQuery();
     const currentDate = useCurrentDate('minute');
+    const currentDateWithoutTime = stripTime(currentDate);
 
     const allSubjectItems = useMemo(
         () => query.data?.schedule.items.filter((item) => item.subject === subject) ?? [],
@@ -125,6 +127,17 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
             .sort((a, b) => a.name.localeCompare(b.name));
     }, [allSubjectItems]);
 
+    const allItemsGroups = useMemo(
+        () =>
+            Array.from(
+                allSubjectItems.reduce((set, item) => {
+                    item.groups.forEach((group) => set.add(group));
+                    return set;
+                }, new Set<string>()),
+            ).sort((a, b) => a.localeCompare(b)),
+        [allSubjectItems],
+    );
+
     return (
         <Modal
             title={subject}
@@ -142,7 +155,7 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                     ))}
                 </div>
                 <hr class="border-x-bg-quinary my-2 lg:hidden" />
-                <div class="divide-x-bg-quinary flex flex-col lg:gap-2 lg:pl-2">
+                <div class="divide-x-bg-quinary flex flex-col lg:gap-1 lg:pl-2">
                     <p class="text-lg font-semibold md:text-xl">{labels.subjectDetailsLecturersSectionHeader}</p>
                     {lecturerInfos.map((lecturerInfo) => (
                         <div key={lecturerInfo.name} class="flex flex-col py-1">
@@ -157,7 +170,7 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                                     />
                                 )}
                             </div>
-                            <div class="flex">
+                            <div class="mt-1 flex">
                                 {lecturerInfo.itemTypes.map((itemType) => (
                                     <span
                                         class={clsx(
@@ -170,6 +183,10 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                                 ))}
                             </div>
                         </div>
+                    ))}
+                    <p class="text-lg font-semibold md:text-xl">{labels.subjectDetailsGroupsSectionHeader}</p>
+                    {allItemsGroups.map((group) => (
+                        <p key={group}>- {group}</p>
                     ))}
                 </div>
             </div>
@@ -192,15 +209,17 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                             <span class="text-xxs lg:text-xs">
                                 {` (${daysFromNowFormatter.format(
                                     Math.round(
-                                        (item.start.date.getTime() - currentDate.getTime()) / (1000 * 60 * 60 * 24),
-                                    ) - 1,
+                                        (item.start.parts.stripTime().toDate().getTime() -
+                                            currentDateWithoutTime.getTime()) /
+                                            (1000 * 60 * 60 * 24),
+                                    ),
                                     'days',
                                 )})`}
                             </span>
                         </p>
                         <p
                             class={clsx(
-                                'col-span-3 mx-2 border-x-2 px-2',
+                                'col-span-4 mx-2 border-x-2 px-2',
                                 item.end.date.getTime() < currentDate.getTime()
                                     ? 'border-x-bg-quinary'
                                     : 'border-x-cta-darker',
@@ -215,7 +234,7 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                                 )})`}
                             </span>
                         </p>
-                        <p class={clsx('col-span-4', getItemTypeTextClass(item.type.value))}>{item.type.value}</p>
+                        <p class={clsx('col-span-3', getItemTypeTextClass(item.type.value))}>{item.type.value}</p>
                     </div>
                 ))}
             </div>
