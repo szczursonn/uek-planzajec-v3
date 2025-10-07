@@ -126,7 +126,7 @@ export const ScheduleViewCalendar = () => {
     let hasFutureItemOutlineBeenRendered = false;
 
     return (
-        <ul class="3xl:px-[10%] grid w-full grid-cols-1 gap-x-1 gap-y-4 p-4 sm:grid-cols-7 sm:gap-x-2 sm:gap-y-10 xl:px-[5%]">
+        <ul class="3xl:px-[10%] grid w-full grid-cols-1 gap-x-1 gap-y-4 p-2 sm:grid-cols-7 sm:gap-y-10 md:gap-x-2 md:p-4 xl:px-[5%]">
             {query.data?.schedule.filteredItems.length === 0 && (
                 <span class="text-center text-xl font-semibold sm:hidden">{labels.noScheduleItemsMessage}</span>
             )}
@@ -199,7 +199,7 @@ export const ScheduleViewCalendar = () => {
                                               )}
                                           <div
                                               class={clsx(
-                                                  'sm:text-xxxs relative z-10 flex w-full flex-col gap-y-0.5 rounded-lg border-2 p-3 text-left text-xs transition-all hover:shadow-2xl sm:p-1.5 lg:p-2.5 lg:text-xs',
+                                                  'sm:text-xxxs relative z-10 flex w-full flex-col gap-y-0.5 rounded-lg border-2 p-3 text-left text-xs transition-all hover:shadow-2xl sm:p-1.25 lg:p-2.5 lg:text-xs',
                                                   getScheduleItemTypeCategoryClass(item.type.category),
                                                   isCurrentSchedulePeriodUpcoming &&
                                                       isPastItem &&
@@ -224,7 +224,7 @@ export const ScheduleViewCalendar = () => {
                                               )}
                                               <span
                                                   class={clsx(
-                                                      'sm:text-xxs text-sm font-bold sm:break-all lg:text-xs xl:break-normal',
+                                                      'sm:text-xxxs text-sm font-bold sm:font-black lg:text-xs lg:font-bold',
                                                       shouldRenderItemOutline && 'mt-6 md:mt-7',
                                                   )}
                                               >
@@ -241,10 +241,10 @@ export const ScheduleViewCalendar = () => {
                                                   )}
                                               </div>
                                               {item.room && !item.isOnline && (
-                                                  <div class="flex items-center gap-1.5">
+                                                  <div class="flex items-center gap-1.5 sm:gap-1 lg:gap-2">
                                                       <Icon
                                                           name="pin"
-                                                          class="h-3 w-3 shrink-0 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3"
+                                                          class="h-3 w-3 shrink-0 sm:h-2 sm:w-2 lg:h-3 lg:w-3"
                                                       />
                                                       <span class="lg:not-hover:truncate">{item.room.name}</span>
                                                   </div>
@@ -252,10 +252,10 @@ export const ScheduleViewCalendar = () => {
                                               {(currentScheduleType !== 'lecturer' ||
                                                   query.data!.schedule.headers.length > 1) &&
                                                   item.lecturers.map((lecturer) => (
-                                                      <div class="flex items-center gap-1.5">
+                                                      <div class="flex items-center gap-1.5 sm:gap-1 lg:gap-2">
                                                           <Icon
                                                               name="person"
-                                                              class="h-3 w-3 shrink-0 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3"
+                                                              class="h-3 w-3 shrink-0 sm:h-2 sm:w-2 lg:h-3 lg:w-3"
                                                           />
 
                                                           {lecturer.moodleId ? (
@@ -275,10 +275,13 @@ export const ScheduleViewCalendar = () => {
                                                   ))}
                                               {currentScheduleType !== 'group' &&
                                                   item.groups.map((group) => (
-                                                      <div key={group} class="flex items-center gap-1.5">
+                                                      <div
+                                                          key={group}
+                                                          class="flex items-center gap-1.5 sm:gap-1 lg:gap-2"
+                                                      >
                                                           <Icon
                                                               name="group"
-                                                              class="h-3 w-3 shrink-0 sm:h-2.5 sm:w-2.5 lg:h-3 lg:w-3"
+                                                              class="h-3 w-3 shrink-0 sm:h-2 sm:w-2 lg:h-3 lg:w-3"
                                                           />
                                                           <span>{group}</span>
                                                       </div>

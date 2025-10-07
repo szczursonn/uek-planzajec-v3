@@ -27,7 +27,7 @@ export const AppOptionsDrawerSelectedSchedulesSection = () => {
                 return (
                     <div
                         class={clsx(
-                            'border-x-bg-quinary flex w-full justify-between p-1.25',
+                            'border-x-bg-quinary flex w-full items-center justify-between p-1.25',
                             i === 0 ? 'rounded-t-md border-2' : 'border-x-2 border-b-2',
                             i === MAX_SELECTABLE_SCHEDULES - 1 && 'rounded-b-md',
                         )}
@@ -45,7 +45,7 @@ export const AppOptionsDrawerSelectedSchedulesSection = () => {
                         <div class="text-x-text-default-muted flex">
                             {scheduleId === undefined ? (
                                 <RoundIconButton
-                                    class="text-x-text-default-muted h-7 p-0.75"
+                                    class="text-x-text-default-muted h-9 p-0.75"
                                     icon="plus"
                                     title={labels.addScheduleCTA}
                                     href={createDerivedURL(selectorModalOpenState.createUpdate(true))}
@@ -54,13 +54,13 @@ export const AppOptionsDrawerSelectedSchedulesSection = () => {
                             ) : (
                                 <>
                                     <RoundIconButton
-                                        class="h-7 p-1"
+                                        class="h-9 p-1.25"
                                         icon="externalLink"
                                         title={labels.officialScheduleFor(scheduleDisplayName)}
                                         href={createOfficialScheduleURL(currentScheduleType, scheduleId)}
                                     />
                                     <RoundIconButton
-                                        class="h-7 p-1"
+                                        class="h-9 p-1.25"
                                         icon="cross"
                                         title={labels.removeXCTA(scheduleDisplayName)}
                                         href={createDerivedURL(scheduleIdsState.createRemoveUpdater(scheduleId))}

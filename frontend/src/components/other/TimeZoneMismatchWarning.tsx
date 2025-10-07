@@ -11,7 +11,7 @@ export const TimeZoneMismatchWarning = () => {
     }
 
     return (
-        <div class="bg-x-bg-tertiary border-x-warning fixed bottom-0 left-0 flex w-full items-center justify-between border-2 p-2">
+        <div class="bg-x-bg-tertiary border-x-warning fixed bottom-0 left-0 z-40 flex w-full items-center justify-between border-2 p-2">
             <span class="text-lg">{labels.timeZoneMismatchMessage}</span>
             <RoundIconButton class="h-8 p-1" icon="cross" onClick={() => setIsVisible(false)} />
         </div>

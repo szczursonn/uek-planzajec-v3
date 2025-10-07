@@ -46,7 +46,7 @@ export const Button = ({
 }: ButtonProps) => {
     const finalTitle = title || text;
     const finalClassName = clsx(
-        'flex items-center justify-center gap-3 w-full rounded-md py-1.5 px-2 lg:px-4 transition-colors',
+        'flex items-center justify-center gap-3 w-full rounded-md py-1.5 px-3 lg:px-4 transition-colors',
         VARIANT_CLASSES[variant],
         disabled
             ? 'cursor-default text-white/60'

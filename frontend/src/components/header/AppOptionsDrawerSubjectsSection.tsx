@@ -63,7 +63,7 @@ export const AppOptionsDrawerSubjectsSection = () => {
 
                         <div class="text-x-text-default-muted flex gap-0.5">
                             <RoundIconButton
-                                class="h-8 p-1.25"
+                                class="h-9 p-1.25"
                                 icon={isHidden ? 'eyeHide' : 'eyeShow'}
                                 title={(isHidden ? labels.showXCTA : labels.hideXCTA)(
                                     subject || labels.unnamedPlaceholder,
@@ -77,7 +77,7 @@ export const AppOptionsDrawerSubjectsSection = () => {
                             />
                             {subject && (
                                 <RoundIconButton
-                                    class="h-8 p-1.25"
+                                    class="h-9 p-1.25"
                                     icon="info"
                                     title={`${subject} - ${labels.details}`}
                                     href={createDerivedURL(subjectDetailsModalSubjectState.createUpdate(subject))}

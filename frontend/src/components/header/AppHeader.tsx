@@ -29,9 +29,9 @@ export const AppHeader = ({
     }, [query.data?.schedule.headers]);
 
     return (
-        <div class="shadow-x-bg-primary sticky top-0 z-50 shadow-lg">
-            <header class="bg-x-bg-secondary border-b-x-bg-tertiary flex h-16 w-full items-center justify-between border-b-2 px-3 py-2 transition-colors lg:px-4">
-                <div class="flex h-full w-full items-center gap-2 lg:w-auto lg:gap-4">
+        <div class="shadow-x-bg-primary sticky top-0 z-50 shadow-md">
+            <header class="bg-x-bg-secondary border-b-x-bg-tertiary flex h-16 w-full items-center justify-between border-b-2 px-3 py-2 transition-colors sm:h-14 lg:h-16 lg:px-4">
+                <div class="flex h-full w-full items-center gap-2 lg:gap-4">
                     <div class="hidden lg:contents">
                         <RoundIconButton
                             class={clsx('h-10 p-1.5', isOptionsDrawerOpen && 'rotate-180')}
@@ -70,25 +70,32 @@ export const AppHeader = ({
                         )}
                     </div>
 
-                    <div class="contents lg:hidden">
-                        <RoundIconButton
-                            class={clsx('ml-auto h-10 p-1.5', isOptionsDrawerOpen && 'rotate-180')}
-                            icon={isOptionsDrawerOpen ? 'cross' : 'burgerMenu'}
-                            onClick={onToggleOptionsDrawer}
-                        />
-                    </div>
                     <div class="hidden xl:block">
                         <AppOptionsShareButton />
                     </div>
-                </div>
 
-                <div class="hidden h-full gap-4 lg:flex">
-                    <SchedulePeriodSelect
-                        class="border-b-x-bg-quinary hover:border-b-x-cta-primary hover:bg-x-bg-tertiary outline-x-cta-primary cursor-pointer border-b-2 px-2 py-3 transition-colors hover:rounded-t focus-visible:rounded-t focus-visible:outline-2"
-                        optgroupClass="bg-x-bg-tertiary"
-                    />
-                    <div class="hidden xl:contents">
-                        <AppOptionsExportButton />
+                    <div class="ml-auto flex gap-3">
+                        <div class="hidden h-full gap-2 sm:flex">
+                            <SchedulePeriodSelect
+                                class="border-b-x-bg-quinary hover:border-b-x-cta-primary hover:bg-x-bg-tertiary outline-x-cta-primary max-w-56 cursor-pointer border-b-2 px-2 py-3 text-sm transition-colors hover:rounded-t focus-visible:rounded-t focus-visible:outline-2 lg:max-w-full lg:text-base"
+                                optgroupClass="bg-x-bg-tertiary"
+                            />
+                            <div class="hidden xl:contents">
+                                <AppOptionsExportButton />
+                            </div>
+
+                            {/* {isPWAPromptAvailable && (
+                                <div class="hidden sm:contents">
+                                    <Button text={labels.installCTA} icon="plus" onClick={() => showPWAPrompt()} />
+                                </div>
+                            )} */}
+                        </div>
+
+                        <RoundIconButton
+                            class={clsx('h-10 p-1.5 lg:hidden', isOptionsDrawerOpen && 'rotate-180')}
+                            icon={isOptionsDrawerOpen ? 'cross' : 'burgerMenu'}
+                            onClick={onToggleOptionsDrawer}
+                        />
                     </div>
                 </div>
             </header>

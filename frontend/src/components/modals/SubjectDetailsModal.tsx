@@ -163,7 +163,8 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                                 <span class="text-sm lg:text-base">- {lecturerInfo.name}</span>
                                 {lecturerInfo.moodleURL !== null && (
                                     <Button
-                                        class="max-w-8"
+                                        class="max-w-fit"
+                                        text={labels.eBusinessCard}
                                         icon="externalLink"
                                         title={labels.eBusinessCardForX(lecturerInfo.name)}
                                         href={lecturerInfo.moodleURL}
@@ -200,7 +201,7 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                     <div
                         key={item.id}
                         class={clsx(
-                            'hover:border-x-bg-quinary grid grid-cols-10 items-center gap-y-3 rounded border-2 border-transparent p-0.5 transition-all md:p-1',
+                            'hover:border-x-bg-quinary grid grid-cols-10 items-center rounded border-2 border-transparent p-0.5 transition-all md:p-1',
                         )}
                     >
                         <p class="col-span-3">
@@ -219,7 +220,7 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                         </p>
                         <p
                             class={clsx(
-                                'col-span-4 mx-2 border-x-2 px-2',
+                                'col-span-4 mx-2 flex flex-col border-x-2 px-2 py-0.5 sm:flex-row sm:items-center sm:gap-1',
                                 item.end.date.getTime() < currentDate.getTime()
                                     ? 'border-x-bg-quinary'
                                     : 'border-x-cta-darker',
@@ -228,7 +229,7 @@ const SubjectDetailsModal = ({ subject }: { subject: string }) => {
                             <span>
                                 {item.start.parts.toTimeString()}-{item.end.parts.toTimeString()}
                             </span>
-                            <span class="text-xs">
+                            <span class="text-xxs sm:text-xs">
                                 {` (${labels.durationHoursAndMinutesShort(
                                     item.end.date.getTime() - item.start.date.getTime(),
                                 )})`}

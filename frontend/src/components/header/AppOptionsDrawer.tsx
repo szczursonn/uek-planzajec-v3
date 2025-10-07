@@ -1,10 +1,10 @@
 import clsx from 'clsx';
 import { appVersion } from '../../lib/versionInfo';
-import { AppOptionsDrawerSchedulePeriodSelector } from './AppOptionsDrawerSchedulePeriodSelector';
 import { AppOptionsDrawerSavedSchedulesSection } from './AppOptionsDrawerSavedSchedulesSection';
 import { AppOptionsDrawerSelectedSchedulesSection } from './AppOptionsDrawerSelectedSchedulesSection';
 import { AppOptionsDrawerSubjectsSection } from './AppOptionsDrawerSubjectsSection';
 import { AppOptionsDrawerOtherSettingsSection } from './AppOptionsDrawerOtherSettingsSection';
+import { AppOptionsDrawerPWAPrompt } from './AppOptionsDrawerPWAPrompt';
 
 export const AppOptionsDrawer = ({ isOpen }: { isOpen: boolean }) => {
     return (
@@ -15,9 +15,9 @@ export const AppOptionsDrawer = ({ isOpen }: { isOpen: boolean }) => {
             )}
         >
             <div class="flex max-h-full flex-col items-center gap-2 overflow-y-auto p-3 lg:h-auto lg:min-h-full">
-                <AppOptionsDrawerSchedulePeriodSelector />
-                <AppOptionsDrawerSavedSchedulesSection />
+                <AppOptionsDrawerPWAPrompt />
                 <AppOptionsDrawerSelectedSchedulesSection />
+                <AppOptionsDrawerSavedSchedulesSection />
                 <AppOptionsDrawerSubjectsSection />
                 <AppOptionsDrawerOtherSettingsSection />
 

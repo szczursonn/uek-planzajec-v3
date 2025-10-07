@@ -21,7 +21,8 @@ export const durationHoursAndMinutesShort = (ms: number) => {
 
     return parts.join(' ');
 };
-export const eBusinessCardForX = (x: string) => `E-Wizytówka: ${x}`;
+export const eBusinessCard = 'E-Wizytówka';
+export const eBusinessCardForX = (x: string) => `${eBusinessCard}: ${x}`;
 export const emptySlot = 'Pusty slot';
 export const endOfScheduleItemMessage = (relativeTime: string) => `Koniec: ${relativeTime}`;
 export const exportCTA = 'Eksportuj';
@@ -38,6 +39,8 @@ export const groupStages = {
 export const highlightOnlineOnlyDays = 'Podkreśl dni tylko online';
 export const howToAddICalToGoogleCalendarLinkTitle = 'Jak dodać plany zajęć do Kalendarza Google?';
 export const hideXCTA = (x: string) => `Ukryj "${x}"`;
+export const installPWAHeader = 'Dodaj aplikację';
+export const installPWAPrompt = 'Zainstaluj';
 export const inX = (x: string) => `w: ${x}`;
 export const longBreakMessage = (durationMs: number) => `Długa przerwa: ${durationHoursAndMinutesShort(durationMs)}`;
 export const nHiddenSubjects = (n: number) => {
@@ -61,7 +64,7 @@ export const online = 'Online';
 export const otherLinks = 'Inne';
 export const saveCTA = 'Zapisz';
 export const saveScheduleCTA = 'Zapisz plan zajęć';
-export const saved = 'Zapisane';
+export const savedSchedules = 'Zapisane plany zajęć';
 export const schedulePeriodCategoryPresets = 'Rekomendowane';
 export const schedulePeriodCategoryOthers = 'Inne';
 export const schedulePeriodPresets = {

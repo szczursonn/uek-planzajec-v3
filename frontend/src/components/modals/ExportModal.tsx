@@ -49,15 +49,18 @@ const ExportModal = () => {
                         {icalURL}
                     </a>
                     <div class="flex gap-2">
-                        <Button
-                            variant="tertiary"
-                            class="h-12 w-12"
-                            iconClass={isCopySuccessIconVisible ? 'fill-green-500' : ''}
-                            icon={isCopySuccessIconVisible ? 'check' : 'copy'}
-                            onClick={() =>
-                                navigator.clipboard.writeText(icalURL).then(() => setIsCopySuccessIconVisible(true))
-                            }
-                        />
+                        {window.navigator.clipboard && (
+                            <Button
+                                variant="tertiary"
+                                class="h-12 w-12"
+                                iconClass={isCopySuccessIconVisible ? 'fill-green-500' : ''}
+                                icon={isCopySuccessIconVisible ? 'check' : 'copy'}
+                                onClick={() =>
+                                    navigator.clipboard.writeText(icalURL).then(() => setIsCopySuccessIconVisible(true))
+                                }
+                            />
+                        )}
+
                         {window.navigator.canShare?.({
                             url: icalURL,
                         }) && (

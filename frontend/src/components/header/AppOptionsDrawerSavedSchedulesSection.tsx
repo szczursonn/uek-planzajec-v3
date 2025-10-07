@@ -31,7 +31,7 @@ export const AppOptionsDrawerSavedSchedulesSection = () => {
     const createURL = useURLCreator();
 
     return (
-        <AppOptionsDrawerSection title={labels.saved}>
+        <AppOptionsDrawerSection title={labels.savedSchedules}>
             {currentSavedSchedules.length === 0 && labels.noSavedSchedulesMessage}
             <div class="divide-x-bg-quaternary flex flex-col divide-y-2">
                 {currentSavedSchedules.map((savedSchedule) => (
