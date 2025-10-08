@@ -215,7 +215,7 @@ export const ScheduleViewCalendar = () => {
                                                           !isFutureItem && 'animate-pulse',
                                                       )}
                                                   >
-                                                      <div class="bg-x-cta-darker pointer-events-auto h-min w-full py-1 text-center text-sm font-bold sm:text-xs md:text-sm">
+                                                      <div class="bg-x-cta-darker pointer-events-auto h-min w-full pb-0.5 text-center text-sm font-bold sm:text-xs md:text-sm lg:py-1">
                                                           {isFutureItem
                                                               ? formatItemRelativeTime(item.start.date, currentDate)
                                                               : labels.endOfScheduleItemMessage(
@@ -227,7 +227,7 @@ export const ScheduleViewCalendar = () => {
                                               <span
                                                   class={clsx(
                                                       'sm:text-xxxs text-sm font-bold sm:font-black lg:text-xs lg:font-bold',
-                                                      shouldRenderItemOutline && 'mt-6 md:mt-7',
+                                                      shouldRenderItemOutline && 'mt-5 lg:mt-6',
                                                   )}
                                               >
                                                   {[item.subject, item.type.value].filter(Boolean).join(' - ')}
@@ -299,7 +299,7 @@ export const ScheduleViewCalendar = () => {
                                               )}
                                               {item.extra && (
                                                   <>
-                                                      <hr class="border-x-bg-quinary my-1" />
+                                                      <hr class="border-x-bg-error my-1" />
                                                       <p class="text-x-text-error">{item.extra}</p>
                                                   </>
                                               )}
