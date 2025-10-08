@@ -113,9 +113,11 @@ export const ScheduleViewCalendar = () => {
                 }
 
                 newDayColumn.items.push(item);
-                newDayColumn.isOnlineOnly = newDayColumn.isOnlineOnly || item.isOnline;
                 currentItemIndex++;
             }
+
+            newDayColumn.isOnlineOnly =
+                newDayColumn.items.length > 0 && newDayColumn.items.every((item) => item.isOnline);
 
             dayColumns.push(newDayColumn);
         }
