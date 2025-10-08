@@ -1,5 +1,5 @@
 import { labels } from '../../lib/intl/labels';
-import { highlightOnlineOnlyDaysState, showLongBreaksState } from '../../lib/scheduleViewConfig';
+import { highlightOnlineOnlyDaysState, LONG_BREAK_THRESHOLD, showLongBreaksState } from '../../lib/scheduleViewConfig';
 import { AppOptionsDrawerSection } from './AppOptionsDrawerSection';
 
 export const AppOptionsDrawerOtherSettingsSection = () => {
@@ -9,7 +9,7 @@ export const AppOptionsDrawerOtherSettingsSection = () => {
     return (
         <AppOptionsDrawerSection title={labels.settings}>
             <AppOptionsDrawerOtherSettingsSectionCheckbox
-                label={labels.showLongBreaks}
+                label={`${labels.showLongBreaks} (>${labels.durationHoursAndMinutesShort(LONG_BREAK_THRESHOLD)})`}
                 checked={currentShowLongBreaks}
                 onToggle={() => showLongBreaksState.set(!currentShowLongBreaks)}
             />
