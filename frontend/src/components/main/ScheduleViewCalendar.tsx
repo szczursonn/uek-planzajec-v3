@@ -215,7 +215,7 @@ export const ScheduleViewCalendar = () => {
                                                           !isFutureItem && 'animate-pulse',
                                                       )}
                                                   >
-                                                      <div class="bg-x-cta-darker pointer-events-auto h-min w-full pb-0.5 text-center text-sm font-bold sm:text-xs md:text-sm lg:py-1">
+                                                      <div class="bg-x-cta-darker sm:text-xxs pointer-events-auto h-min w-full truncate pb-0.5 text-center text-sm font-bold md:text-sm lg:py-1">
                                                           {isFutureItem
                                                               ? formatItemRelativeTime(item.start.date, currentDate)
                                                               : labels.endOfScheduleItemMessage(
@@ -227,13 +227,13 @@ export const ScheduleViewCalendar = () => {
                                               <span
                                                   class={clsx(
                                                       'sm:text-xxxs text-sm font-bold sm:font-black lg:text-xs lg:font-bold',
-                                                      shouldRenderItemOutline && 'mt-5 lg:mt-6',
+                                                      shouldRenderItemOutline && 'mt-5 sm:mt-4 lg:mt-6',
                                                   )}
                                               >
                                                   {[item.subject, item.type.value].filter(Boolean).join(' - ')}
                                               </span>
                                               <div class="flex flex-wrap items-center gap-x-1">
-                                                  <span class="font-semibold whitespace-nowrap">
+                                                  <span class="truncate font-semibold">
                                                       {`${item.start.parts.toTimeString()}-${item.end.parts.toTimeString()} (${labels.durationHoursAndMinutesShort(item.end.date.getTime() - item.start.date.getTime())})`}
                                                   </span>
                                                   {item.room && item.isOnline && (
