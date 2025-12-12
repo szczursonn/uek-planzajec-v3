@@ -17,7 +17,7 @@ import (
 	"github.com/szczursonn/uek-planzajec-v3/internal/uek"
 )
 
-const maxSchedulesPerRequest = 3
+const maxSchedulesPerRequest = 4
 
 func (srv *Server) registerAPIRoutes() {
 	mux := srv.httpServer.Handler.(*http.ServeMux)

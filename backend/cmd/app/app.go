@@ -12,11 +12,11 @@ import (
 	_ "time/tzdata"
 
 	"github.com/joho/godotenv"
+	"github.com/szczursonn/uek-planzajec-v3/internal/badgercache"
 	"github.com/szczursonn/uek-planzajec-v3/internal/config"
 	"github.com/szczursonn/uek-planzajec-v3/internal/server"
 	"github.com/szczursonn/uek-planzajec-v3/internal/uek"
 	"github.com/szczursonn/uek-planzajec-v3/internal/uekmock"
-	"github.com/szczursonn/uek-planzajec-v3/internal/ueksqlitecache"
 )
 
 func main() {
@@ -68,25 +68,28 @@ func run() int {
 		CacheTimes: cfg.CacheTimes,
 	}
 
-	effectiveSqliteCachePath := ""
-	if cfg.SqliteCache.Enabled {
-		sqliteLogger := logger.With("source", "sqliteCache")
+	if cfg.BadgerCache.Enabled {
+		badgerLogger := logger.With("source", "badgerCache")
 
-		sqliteCache, err := ueksqlitecache.New(ctx, cfg.SqliteCache.Path, sqliteLogger)
-		if err != nil {
-			logger.Error("Failed to set up sqlite cache, falling back to in-memory cache", slog.Any("err", err))
-			if sqliteCache, err = ueksqlitecache.New(ctx, ":memory:", sqliteLogger); err != nil {
-				logger.Error("Failed to set up fallback in-memory sqlite cache", slog.Any("err", err))
-			} else {
-				effectiveSqliteCachePath = ":memory"
+		var badgerCache *badgercache.Cache
+		var err error
+		if cfg.BadgerCache.Path != "" {
+			badgerCache, err = badgercache.New(cfg.BadgerCache.Path, badgerLogger)
+			if err != nil {
+				logger.Error("Failed to initialize badger file-based cache, falling back to in-memory cache", slog.Any("err", err))
 			}
-		} else {
-			effectiveSqliteCachePath = cfg.SqliteCache.Path
 		}
 
-		if err == nil {
-			uekClientConfig.Cache = sqliteCache
-			defer sqliteCache.Close()
+		if badgerCache == nil {
+			badgerCache, err = badgercache.New("", badgerLogger)
+			if err != nil {
+				logger.Error("Failed to initialize badger in-memory cache", slog.Any("err", err))
+			}
+		}
+
+		if badgerCache != nil {
+			uekClientConfig.Cache = badgerCache
+			defer badgerCache.Close()
 		}
 	}
 
@@ -104,7 +107,7 @@ func run() int {
 			slog.Bool("debug", cfg.Debug),
 			slog.String("addr", cfg.Addr),
 			slog.Bool("mock", cfg.Mock.Enabled),
-			slog.String("sqliteCachePath", effectiveSqliteCachePath),
+			slog.String("badgerCachePath", cfg.BadgerCache.Path),
 		)
 		if err := srv.Run(); err != nil {
 			logger.Error("Server stopped unexpectedly", slog.Any("err", err))

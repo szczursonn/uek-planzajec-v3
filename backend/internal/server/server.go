@@ -5,15 +5,19 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/szczursonn/uek-planzajec-v3/internal/uek"
 )
 
 type Server struct {
-	httpServer http.Server
-	uek        *uek.Client
-	logger     *slog.Logger
+	httpServer                  http.Server
+	uek                         *uek.Client
+	logger                      *slog.Logger
+	bufferPool                  sync.Pool
+	staticAssetPathToMetadata   map[string]staticAssetMetadata
+	staticAssetPathToMetadataMu sync.RWMutex
 }
 
 func New(addr string, uek *uek.Client, logger *slog.Logger) *Server {
@@ -34,6 +38,13 @@ func New(addr string, uek *uek.Client, logger *slog.Logger) *Server {
 		},
 		uek:    uek,
 		logger: logger,
+		bufferPool: sync.Pool{
+			New: func() any {
+				buff := make([]byte, 32*1024)
+				return &buff
+			},
+		},
+		staticAssetPathToMetadata: map[string]staticAssetMetadata{},
 	}
 
 	srv.registerStaticRoutes()

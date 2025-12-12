@@ -9,7 +9,7 @@ type Config struct {
 	Addr        string
 	Mock        Mock
 	CacheTimes  CacheTimes
-	SqliteCache SqliteCache
+	BadgerCache BadgerCache
 }
 
 type Mock struct {
@@ -26,7 +26,7 @@ type CacheTimes struct {
 	Periods   time.Duration
 }
 
-type SqliteCache struct {
+type BadgerCache struct {
 	Enabled bool
 	Path    string
 }
@@ -47,9 +47,9 @@ func FromEnv() Config {
 			Schedules: getEnvDurationWithDefault("CACHETIME_SCHEDULES", 15*time.Minute),
 			Periods:   getEnvDurationWithDefault("CACHETIME_PERIODS", time.Hour),
 		},
-		SqliteCache: SqliteCache{
-			Enabled: getEnvBoolWithDefault("SQLITE_CACHE_ENABLED", false),
-			Path:    getEnvString("SQLITE_CACHE_PATH"),
+		BadgerCache: BadgerCache{
+			Enabled: getEnvBoolWithDefault("BADGER_CACHE_ENABLED", false),
+			Path:    getEnvString("BADGER_CACHE_PATH"),
 		},
 	}
 }

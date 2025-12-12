@@ -3,6 +3,7 @@ package server
 import (
 	"embed"
 	"errors"
+	"fmt"
 	"io"
 	"io/fs"
 	"log/slog"
@@ -10,75 +11,114 @@ import (
 	"net/http"
 	"path"
 	"strings"
-	"sync"
 )
 
 //go:embed static/*
 var staticFS embed.FS
 
+type staticAssetMetadata struct {
+	contentType  string
+	cacheControl string
+}
+
 func (srv *Server) registerStaticRoutes() {
-	bufferPool := sync.Pool{
-		New: func() any {
-			buff := make([]byte, 32*1024)
-			return &buff
-		},
+	srv.httpServer.Handler.(*http.ServeMux).HandleFunc("GET /", srv.debugLoggingMiddleware(srv.handleStaticAssetRequest))
+}
+
+func (srv *Server) handleStaticAssetRequest(w http.ResponseWriter, r *http.Request) {
+	reqPath := r.URL.Path
+	if reqPath == "/" {
+		reqPath = "/index.html"
+	}
+	filePath := path.Join("static", reqPath)
+
+	f, err := staticFS.Open(filePath)
+	if err != nil {
+		if errors.Is(err, fs.ErrNotExist) {
+			respondNotFound(w)
+			return
+		}
+		respondInternalServerError(w)
+		srv.logger.Error("Failed to open static asset file", slog.String("reqPath", reqPath), slog.Any("err", err))
+		return
+	}
+	defer f.Close()
+
+	assetMetadata, err := srv.getOrCreateStaticAssetMetadata(filePath)
+	if err != nil {
+		respondInternalServerError(w)
+		srv.logger.Error("Failed to get static asset metadata", slog.String("reqPath", reqPath), slog.Any("err", err))
+		return
 	}
 
-	srv.httpServer.Handler.(*http.ServeMux).HandleFunc("GET /", srv.debugLoggingMiddleware(func(w http.ResponseWriter, r *http.Request) {
-		if err := func() error {
-			reqPath := r.URL.Path
-			if reqPath == "/" {
-				reqPath = "/index.html"
-			}
-			filePath := path.Join("static", reqPath)
+	headers := w.Header()
+	headers.Set("Content-Type", assetMetadata.contentType)
+	headers.Set("Cache-Control", assetMetadata.cacheControl)
+	w.WriteHeader(http.StatusOK)
 
-			f, err := staticFS.Open(filePath)
-			if err != nil {
-				if errors.Is(err, fs.ErrNotExist) {
-					respondNotFound(w)
-					return nil
-				}
-				return err
-			}
-			defer f.Close()
+	buff := *srv.bufferPool.Get().(*[]byte)
+	defer srv.bufferPool.Put(&buff)
+	io.CopyBuffer(w, f, buff)
 
-			buff := *bufferPool.Get().(*[]byte)
-			defer bufferPool.Put(&buff)
+}
 
-			fileExtension := path.Ext(filePath)
-			contentTypeHeader := mime.TypeByExtension(fileExtension)
-			if contentTypeHeader == "" && fileExtension == ".webmanifest" {
-				contentTypeHeader = "application/json"
-			}
-			if contentTypeHeader == "" {
-				n, err := io.ReadFull(f, buff)
-				if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
-					return err
-				}
-				if _, err := f.(io.Seeker).Seek(0, io.SeekStart); err != nil {
-					return err
-				}
+func (srv *Server) getOrCreateStaticAssetMetadata(filePath string) (staticAssetMetadata, error) {
+	srv.staticAssetPathToMetadataMu.RLock()
+	existingMetadata, hasExistingMetadata := srv.staticAssetPathToMetadata[filePath]
+	srv.staticAssetPathToMetadataMu.RUnlock()
 
-				contentTypeHeader = http.DetectContentType(buff[:n])
-			}
+	if hasExistingMetadata {
+		return existingMetadata, nil
+	}
 
-			cacheControlHeader := "no-cache"
-			if strings.HasPrefix(filePath, "static/assets/") {
-				cacheControlHeader = "public, immutable, max-age=31536000"
-			}
+	newMetadata := staticAssetMetadata{
+		cacheControl: determineStaticAssetCacheControl(filePath),
+	}
 
-			headers := w.Header()
-			headers.Set("Content-Type", contentTypeHeader)
-			headers.Set("Cache-Control", cacheControlHeader)
+	var err error
+	if newMetadata.contentType, err = srv.determineStaticAssetContentType(filePath); err != nil {
+		return staticAssetMetadata{}, fmt.Errorf("failed to determine content type: %w", err)
+	}
 
-			w.WriteHeader(http.StatusOK)
-			io.CopyBuffer(w, f, buff)
+	srv.staticAssetPathToMetadataMu.Lock()
+	srv.staticAssetPathToMetadata[filePath] = newMetadata
+	srv.staticAssetPathToMetadataMu.Unlock()
 
-			return nil
-		}(); err != nil {
-			respondInternalServerError(w)
-			srv.logger.Error("Static route error", slog.String("reqPath", r.URL.Path), slog.Any("err", err))
-		}
+	return newMetadata, nil
+}
 
-	}))
+func (srv *Server) determineStaticAssetContentType(filePath string) (string, error) {
+	fileExtension := path.Ext(filePath)
+
+	if fileExtension == ".webmanifest" {
+		return "application/json", nil
+	}
+
+	if contentTypeFromExtension := mime.TypeByExtension(fileExtension); contentTypeFromExtension != "" {
+		return contentTypeFromExtension, nil
+	}
+
+	f, err := staticFS.Open(filePath)
+	if err != nil {
+		return "", fmt.Errorf("failed to open file: %w", err)
+	}
+	defer f.Close()
+
+	buff := *srv.bufferPool.Get().(*[]byte)
+	defer srv.bufferPool.Put(&buff)
+
+	n, err := io.ReadFull(f, buff)
+	if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
+		return "", fmt.Errorf("failed to read file: %w", err)
+	}
+
+	return http.DetectContentType(buff[:n]), nil
+}
+
+func determineStaticAssetCacheControl(filePath string) string {
+	if strings.HasPrefix(filePath, "static/assets/") {
+		return "public, immutable, max-age=31536000"
+	}
+
+	return "no-cache"
 }
