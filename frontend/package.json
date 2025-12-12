@@ -8,25 +8,25 @@
         "preview": "vite preview"
     },
     "dependencies": {
-        "@tailwindcss/vite": "^4.1.13",
+        "@tailwindcss/vite": "^4.1.18",
         "clsx": "^2.1.1",
-        "preact": "^10.27.2",
+        "preact": "^10.28.0",
         "stable-hash": "^0.0.6",
-        "swr": "^2.3.6",
-        "tailwindcss": "^4.1.13",
-        "zod": "^4.1.11"
+        "swr": "^2.3.7",
+        "tailwindcss": "^4.1.18",
+        "zod": "^4.1.13"
     },
     "optionalDependencies": {
         "@rollup/rollup-linux-x64-gnu": "^4.50.1"
     },
     "devDependencies": {
         "@preact/preset-vite": "^2.10.2",
-        "@types/node": "^24.5.2",
-        "globals": "^16.4.0",
-        "prettier": "^3.6.2",
+        "@types/node": "^24.10.3",
+        "globals": "^16.5.0",
+        "prettier": "^3.7.4",
         "prettier-plugin-tailwindcss": "^0.6.14",
-        "sharp": "^0.34.4",
-        "typescript": "^5.9.2",
-        "vite": "^7.1.7"
+        "sharp": "^0.34.5",
+        "typescript": "^5.9.3",
+        "vite": "^7.2.7"
     }
 }
