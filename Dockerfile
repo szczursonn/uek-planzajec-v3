@@ -1,4 +1,4 @@
-FROM node:24.4-alpine3.21 AS frontend-builder
+FROM node:24.12-alpine3.22 AS frontend-builder
 WORKDIR /app
 
 RUN apk add git
@@ -8,7 +8,7 @@ WORKDIR /app/frontend
 RUN npm install
 RUN npm run build
 
-FROM golang:1.24.5-alpine AS backend-builder
+FROM golang:1.25.5-alpine AS backend-builder
 WORKDIR /app
 
 COPY . ./
